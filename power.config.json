@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "appId": null,
+  "appDisplayName": "TestCh",
+  "region": "prod",
+  "environmentId": "07da6342-8cc4-e81c-95fa-9ce24e7c2f46",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "coe_aiincidents": {
+          "entitySetName": "cr978_coe_aiincidents",
+          "logicalName": "cr978_coe_aiincident"
+        },
+        "coe_departments": {
+          "entitySetName": "cr978_coe_departments",
+          "logicalName": "cr978_coe_department"
+        },
+        "coe_divisions": {
+          "entitySetName": "cr978_coe_divisions",
+          "logicalName": "cr978_coe_division"
+        },
+        "coe_events": {
+          "entitySetName": "cr978_coe_eventses",
+          "logicalName": "cr978_coe_events"
+        },
+        "coe_persons": {
+          "entitySetName": "cr978_coe_persons",
+          "logicalName": "cr978_coe_person"
+        },
+        "coe_programs": {
+          "entitySetName": "cr978_coe_programs",
+          "logicalName": "cr978_coe_program"
+        },
+        "coe_powerbidashboards": {
+          "entitySetName": "cr978_powerbidashboards",
+          "logicalName": "cr978_powerbidashboard"
+        },
+        "coe_approles": {
+          "entitySetName": "cr978_coe_approles",
+          "logicalName": "cr978_coe_approle"
+        },
+        "coe_discoveries": {
+          "entitySetName": "cr978_coe_discoveries",
+          "logicalName": "cr978_coe_discovery"
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}
