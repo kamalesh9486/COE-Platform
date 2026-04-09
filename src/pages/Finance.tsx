@@ -82,7 +82,7 @@ function mapDivision(raw: Cr978_coe_divisions, idx: number): DivisionFinance {
     id:       raw.cr978_coe_divisionid,
     name:     raw.cr978_divisionname,
     code:     raw.cr978_divisioncode ?? `DIV-${String(idx + 1).padStart(2, '0')}`,
-    status:   raw.cr978_isactive === 0 ? 'Active' : raw.cr978_isactive === 1 ? 'Inactive' : 'Active',
+    status:   raw.cr978_isactive === false ? 'Inactive' : 'Active',
     ...seed,
   }
 }

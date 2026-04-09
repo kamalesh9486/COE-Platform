@@ -348,18 +348,6 @@ export default function LaunchScreen({ onLaunch }: Props) {
       <div className="ls-blob ls-blob--tl" />
       <div className="ls-blob ls-blob--br" />
 
-      {/* Top navigation bar */}
-      <header className="ls-topbar">
-        <div className="ls-topbar-brand">
-          <div className="ls-topbar-name">AI Intelligence Platform <span>· COE</span></div>
-        </div>
-        <div className="ls-topbar-right">
-          <div className="ls-topbar-tag">Q1 2026</div>
-          <div className="ls-topbar-tag">COE v2.0</div>
-          <div className="ls-topbar-live">DEV</div>
-        </div>
-      </header>
-
       {/* Two-column body */}
       <div className="ls-body">
 
@@ -393,10 +381,10 @@ export default function LaunchScreen({ onLaunch }: Props) {
             className={`ls-launch-btn${launching ? ' ls-launch-btn--go' : ''}`}
             onClick={handleLaunch}
             disabled={launching}
-            aria-label="Enter DEWA AI Intelligence Platform"
+            aria-label="Get Started with DEWA AI Intelligence Platform"
           >
             <span className="ls-launch-text">
-              {launching ? 'Initialising…' : 'Enter Intelligence Platform'}
+              {launching ? 'Initialising…' : 'Get Started'}
             </span>
             <span className="ls-launch-icon">
               {launching ? (

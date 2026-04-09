@@ -66,6 +66,23 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
+      {/* Back navigation */}
+      <button
+        onClick={onBack}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'var(--surface)', border: '1.5px solid var(--border-card)',
+          borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 600,
+          color: 'var(--text-muted)', cursor: 'pointer', width: 'fit-content',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)', transition: 'color 0.15s, border-color 0.15s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--dewa-green)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,117,96,0.3)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-card)' }}
+      >
+        <Icon name="bi-chevron-left" />
+        Back to all Technology
+      </button>
+
       {/* Header card */}
       <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: `0 4px 24px ${color}22`, border: `1px solid ${color}33` }}>
         <div style={{ background: `linear-gradient(135deg, ${color}ee 0%, ${color}bb 100%)`, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -77,7 +94,7 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
               onClick={onBack}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.9)', borderRadius: 7, padding: '3px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer', marginBottom: 8 }}
             >
-              <Icon name="bi-arrow-left" /> All Tools
+              <Icon name="bi-chevron-left" /> All Tools
             </button>
             <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{tool.name}</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 }}>{tool.description}</div>

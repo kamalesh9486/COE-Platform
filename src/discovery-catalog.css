@@ -99,6 +99,13 @@
 .dc-person-cell { display: flex; align-items: center; gap: 7px; font-size: 12px; min-width: 110px; }
 .dc-mini-avatar { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #007560, #004937); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(0,117,96,0.2); }
 .dc-date-cell { white-space: nowrap; font-size: 12px; color: #a8a29e; }
+.dc-d2d-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  color: #0891b2; background: rgba(8,145,178,0.08); border: 1px solid rgba(8,145,178,0.18);
+  font-size: 14px; text-decoration: none; transition: background 0.15s, color 0.15s;
+}
+.dc-d2d-link:hover { background: rgba(8,145,178,0.18); color: #0369a1; }
 .dc-score-cell { display: flex; align-items: baseline; gap: 2px; }
 .dc-score-value { font-size: 16px; font-weight: 800; color: #1c1c1e; }
 .dc-score-max { font-size: 11px; color: #a8a29e; }

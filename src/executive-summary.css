@@ -182,21 +182,19 @@
 
 .es2-kpi-card {
   position: relative;
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.92);
   border-radius: 20px;
   padding: 22px 20px 18px;
   border: 1px solid rgba(0,117,96,0.13);
   overflow: hidden;
-  animation: es2-float 3.8s ease-in-out infinite, es2-glow-pulse 4.5s ease-in-out infinite, es2-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) both;
-  transition: transform 0.22s ease, border-color 0.22s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
   cursor: default;
 }
 .es2-kpi-card:hover {
-  transform: translateY(-10px) scale(1.025) !important;
-  border-color: rgba(0,117,96,0.32);
-  animation-play-state: paused;
+  transform: translateY(-3px);
+  border-color: rgba(0,117,96,0.28);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.05);
 }
 .es2-kpi-card::before {
   content: '';
@@ -214,17 +212,6 @@
   border-color: rgba(202,138,4,0.18);
 }
 
-/* Shimmer sweep */
-.es2-kpi-shimmer {
-  position: absolute;
-  top: 0; left: 0;
-  width: 35%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
-  animation: es2-shimmer 4s ease-in-out infinite 1.2s;
-  pointer-events: none;
-  z-index: 0;
-}
 
 .es2-kpi-icon {
   position: relative;
@@ -258,13 +245,6 @@
   letter-spacing: -1.5px;
   line-height: 1;
   margin-bottom: 2px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.5s ease 0.35s, transform 0.5s ease 0.35s;
-}
-.es2-kpi-value--in {
-  opacity: 1;
-  transform: translateY(0);
 }
 .es2-kpi-label {
   position: relative;

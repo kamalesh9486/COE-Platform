@@ -43,12 +43,6 @@ function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
-// ── AI Type helper ────────────────────────────────────────────
-function isAI(r: Discovery): boolean {
-  const v = (r.cr978_ai_type ?? '').toLowerCase()
-  return v.includes('ai') && !v.startsWith('non')
-}
-
 // ── Status badge ──────────────────────────────────────────────
 const STATUS_BADGE_MAP: Record<string, string> = {
   'submitted':        'dc-badge-submitted',
@@ -88,23 +82,23 @@ function AITypeBadge({ value }: { value?: string }) {
 
 // ── KPI Strip ─────────────────────────────────────────────────
 function KpiStrip({ items, maps }: { items: Discovery[]; maps: LookupMaps }) {
-  const total     = items.length
-  const aiCount   = items.filter(isAI).length
-  const nonAiCnt  = total - aiCount
-  const divCount  = new Set(items.map(r => r._cr978_coe_requestingdivision_value).filter(Boolean)).size
-  const deptCount = new Set(items.map(r => r._cr978_coe_requestingdepartment_value).filter(Boolean)).size
-  const leadCount = new Set(items.map(r => r._cr978_it_lead_value).filter(Boolean)).size
+  const total          = items.length
+  const allocatedCnt   = items.filter(r => !!r._cr978_it_lead_value).length
+  const unallocatedCnt = items.filter(r => !r._cr978_it_lead_value).length
+  const divCount       = new Set(items.map(r => r._cr978_coe_requestingdivision_value).filter(Boolean)).size
+  const deptCount      = new Set(items.map(r => r._cr978_coe_requestingdepartment_value).filter(Boolean)).size
+  const leadCount      = new Set(items.map(r => r._cr978_it_lead_value).filter(Boolean)).size
 
   // suppress unused warning
   void maps
 
   const kpis = [
-    { label: 'Total Discoveries', value: total,     icon: 'bi-collection',     bg: 'rgba(0,51,102,0.08)',   color: '#003366' },
-    { label: 'AI Discoveries',    value: aiCount,   icon: 'bi-cpu',            bg: 'rgba(124,58,237,0.1)',  color: '#6d28d9' },
-    { label: 'Non-AI',            value: nonAiCnt,  icon: 'bi-gear',           bg: 'rgba(0,117,96,0.1)',    color: '#007560' },
-    { label: 'Divisions',         value: divCount,  icon: 'bi-diagram-3-fill', bg: 'rgba(8,145,178,0.1)',   color: '#0891b2' },
-    { label: 'Departments',       value: deptCount, icon: 'bi-building',       bg: 'rgba(245,166,35,0.12)', color: '#b07d10' },
-    { label: 'IT Leads',          value: leadCount, icon: 'bi-people-fill',   bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
+    { label: 'Total Discoveries',   value: total,          icon: 'bi-collection',     bg: 'rgba(0,51,102,0.08)',   color: '#003366' },
+    { label: 'Allocated Demands',   value: allocatedCnt,   icon: 'bi-check-circle-fill', bg: 'rgba(0,117,96,0.1)',  color: '#007560' },
+    { label: 'Unallocated Demands', value: unallocatedCnt, icon: 'bi-hourglass-split', bg: 'rgba(239,68,68,0.1)', color: '#dc2626' },
+    { label: 'Divisions',           value: divCount,       icon: 'bi-diagram-3-fill', bg: 'rgba(8,145,178,0.1)',   color: '#0891b2' },
+    { label: 'Departments',         value: deptCount,      icon: 'bi-building',       bg: 'rgba(245,166,35,0.12)', color: '#b07d10' },
+    { label: 'IT Leads',            value: leadCount,      icon: 'bi-people-fill',    bg: 'rgba(16,185,129,0.1)', color: '#059669' },
   ]
   return (
     <div className="dc-kpi-strip">
@@ -218,17 +212,11 @@ function DivisionChart({ items, maps }: { items: Discovery[]; maps: LookupMaps }
 }
 
 // ── Chart 2: Status Distribution (Donut) ─────────────────────
-const STATUS_COLORS: Record<string, string> = {
-  'submitted':        '#94a3b8',   // slate
-  'under review':     '#38bdf8',   // sky blue
-  'approved':         '#34d399',   // emerald
-  'in development':   '#a78bfa',   // violet
-  'in testing':       '#fb923c',   // orange
-  'delivered':        '#22c55e',   // green
-  'rejected':         '#f87171',   // red
-  'on hold':          '#fbbf24',   // amber
-}
-function getStatusColor(s: string) { return STATUS_COLORS[s.toLowerCase()] ?? '#6366f1' }
+const CHART_PALETTE = [
+  '#6366f1', '#0891b2', '#10b981', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#ec4899', '#84cc16', '#f97316', '#14b8a6',
+  '#3b82f6', '#a855f7', '#ca8a04', '#007560', '#dc2626',
+]
 
 function StatusChart({ items }: { items: Discovery[] }) {
   const data = useMemo(() => {
@@ -237,7 +225,9 @@ function StatusChart({ items }: { items: Discovery[] }) {
       const s = r.cr978_status ?? 'Unknown'
       map.set(s, (map.get(s) ?? 0) + 1)
     }
-    return [...map.entries()].map(([name, value]) => ({ name, value, color: getStatusColor(name) }))
+    return [...map.entries()].map(([name, value], idx) => ({
+      name, value, color: CHART_PALETTE[idx % CHART_PALETTE.length],
+    }))
   }, [items])
 
   return (
@@ -410,7 +400,6 @@ export default function DiscoveryCatalog() {
   const [error,        setError]        = useState('')
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
-  const [typeFilter,   setTypeFilter]   = useState('All')
   const [divFilter,    setDivFilter]    = useState('All')
   const [deptFilter,   setDeptFilter]   = useState('All')
   const [selected,     setSelected]     = useState<Discovery | null>(null)
@@ -488,13 +477,10 @@ export default function DiscoveryCatalog() {
         (r.cr978_ai_type  ?? '').toLowerCase().includes(q)
 
       const matchS  = statusFilter === 'All' || r.cr978_status === statusFilter
-      const matchT  = typeFilter   === 'All' ||
-        (typeFilter === 'AI' && isAI(r)) ||
-        (typeFilter === 'Non-AI' && !isAI(r))
       const matchDv = divFilter  === 'All' || divName  === divFilter
       const matchDp = deptFilter === 'All' || deptName === deptFilter
 
-      return matchQ && matchS && matchT && matchDv && matchDp
+      return matchQ && matchS && matchDv && matchDp
     })
 
     list = [...list].sort((a, b) => {
@@ -504,7 +490,7 @@ export default function DiscoveryCatalog() {
       return sortDir === 'asc' ? cmp : -cmp
     })
     return list
-  }, [items, maps, search, statusFilter, typeFilter, divFilter, deptFilter, sortKey, sortDir])
+  }, [items, maps, search, statusFilter, divFilter, deptFilter, sortKey, sortDir])
 
   function toggleSort(key: typeof sortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -551,25 +537,10 @@ export default function DiscoveryCatalog() {
               )}
             </div>
 
-            <div className="dc-filter-group">
-              <div className="prog-status-pills">
-                {(['All', ...allStatuses] as string[]).map(s => (
-                  <button
-                    key={s}
-                    className={`prog-pill${statusFilter === s ? ' active' : ''}`}
-                    onClick={() => setStatusFilter(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="dc-selects-row">
-              <select className="prog-select" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-                <option value="All">All Types</option>
-                <option value="AI">AI</option>
-                <option value="Non-AI">Non-AI</option>
+              <select className="prog-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="All">All Statuses</option>
+                {allStatuses.map(s => <option key={s}>{s}</option>)}
               </select>
               <select className="prog-select" value={divFilter} onChange={e => setDivFilter(e.target.value)}>
                 <option value="All">All Divisions</option>
@@ -594,19 +565,19 @@ export default function DiscoveryCatalog() {
                   <th className="dc-th-sortable" onClick={() => toggleSort('cr978_discoveryname')}>
                     Discovery Name <SortIcon col="cr978_discoveryname" />
                   </th>
-                  <th>AI Type / SAP Type</th>
                   <th>Status</th>
                   <th>Division</th>
                   <th>IT Lead</th>
                   <th className="dc-th-sortable" onClick={() => toggleSort('cr978_submitteddate')}>
                     Submitted On <SortIcon col="cr978_submitteddate" />
                   </th>
+                  <th style={{ textAlign: 'center' }}>D2D Portal</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="dc-empty-row">
+                    <td colSpan={7} className="dc-empty-row">
                       <Icon name="bi-inbox" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
                       No discoveries match the current filters
                     </td>
@@ -623,12 +594,6 @@ export default function DiscoveryCatalog() {
                       <td>
                         <div className="dc-title-cell">
                           <div className="dc-title-text">{r.cr978_discoveryname}</div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <AITypeBadge value={r.cr978_ai_type} />
-                          {r.cr978_sap_type && <span className="dc-category-tag">{r.cr978_sap_type}</span>}
                         </div>
                       </td>
                       <td><StatusBadge status={r.cr978_status} /></td>
@@ -652,6 +617,19 @@ export default function DiscoveryCatalog() {
                         ) : <span style={{ color: '#a8a29e' }}>—</span>}
                       </td>
                       <td className="dc-date-cell">{fmtDate(r.cr978_submitteddate)}</td>
+                      <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        {r.cr978_demand_no ? (
+                          <a
+                            href={`https://d2d.dewa.gov.ae/demand/${r.cr978_demand_no}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dc-d2d-link"
+                            title={`Open ${r.cr978_demand_no} in D2D Portal`}
+                          >
+                            <Icon name="bi-box-arrow-up-right" />
+                          </a>
+                        ) : <span style={{ color: '#d1d5db' }}>—</span>}
+                      </td>
                     </tr>
                   )
                 })}

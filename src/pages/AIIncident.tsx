@@ -75,7 +75,7 @@ function mapRecord(r: Cr978_coe_aiincidents): AIIncidentRecord {
                        : [],
     summary:         r.cr978_coe_description ?? '',
     happenedOn:      (r.cr978_incidentdate ?? r.createdon ?? '').split('T')[0],
-    dataRisk:        r.cr978_coe_isdatarisk === 1,
+    dataRisk:        !!r.cr978_coe_isdatarisk,
     priority:        toSafePriority(r.cr978_coe_priority),
     severity:        toSafeSeverity(r.cr978_coe_severity),
     reportedBy:      r.cr978_coe_repotedby ?? '—',

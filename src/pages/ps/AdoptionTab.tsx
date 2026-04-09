@@ -15,7 +15,7 @@ interface DivisionAdoption {
 function mapToDivisionAdoption(r: Cr978_coe_divisions): DivisionAdoption {
   return {
     division: r.cr978_divisionname,
-    pct:      parseFloat(r.cr435_adoptionrate ?? '0') || 0,
+    pct:      r.cr435_adoptionrate ?? 0,
   }
 }
 

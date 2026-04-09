@@ -212,10 +212,9 @@ interface KpiProps {
   sub: string
   accent?: boolean
   showRing?: boolean
-  delay?: number
 }
 
-function KpiCard({ icon, label, target, displayValue, sub, accent, showRing, delay = 0 }: KpiProps) {
+function KpiCard({ icon, label, target, displayValue, sub, accent, showRing }: KpiProps) {
   const { ref, inView } = useInView()
   const count = useCounter(target, 1400, inView)
   const display = displayValue ?? count.toLocaleString()
@@ -224,14 +223,12 @@ function KpiCard({ icon, label, target, displayValue, sub, accent, showRing, del
     <div
       ref={ref}
       className={`es2-kpi-card${accent ? ' es2-kpi-card--accent' : ''}`}
-      style={{ animationDelay: `${delay}s, ${delay}s, ${delay}s` }}
     >
-      <div className="es2-kpi-shimmer" />
       <div className="es2-kpi-icon">{icon}</div>
       {showRing ? (
         <div className="es2-kpi-ring"><AnimatedRing pct={target} go={inView} /></div>
       ) : (
-        <div className={`es2-kpi-value${inView ? ' es2-kpi-value--in' : ''}`}>{display}</div>
+        <div className="es2-kpi-value">{display}</div>
       )}
       <div className="es2-kpi-label">{label}</div>
       <div className="es2-kpi-sub">{sub}</div>
@@ -319,28 +316,24 @@ export default function ExecutiveSummary() {
             label="AI Adoption Rate"
             target={64}
             sub="Across all divisions"
-            delay={0}
           />
           <KpiCard
             icon={iconKpi('M6.5 6a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zM5.5.5a.5.5 0 0 0-1 0V2A2.5 2.5 0 0 0 2 4.5H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2A2.5 2.5 0 0 0 4.5 14v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14a2.5 2.5 0 0 0 2.5-2.5h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14A2.5 2.5 0 0 0 11.5 2V.5a.5.5 0 0 0-1 0V2h-1V.5a.5.5 0 0 0-1 0V2h-1V.5a.5.5 0 0 0-1 0V2h-1zm1 4.5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5v-3A1.5 1.5 0 0 1 6.5 5')}
             label="Total AI Initiatives"
             target={47}
             sub="+6 from last quarter ↑"
-            delay={0.08}
           />
           <KpiCard
             icon={iconKpi('M2.5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm5 2h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1m-5 1a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm9-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1')}
             label="Active AI Projects"
             target={31}
             sub="7 new this quarter"
-            delay={0.16}
           />
           <KpiCard
             icon={iconKpi('M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466z')}
             label="People Trained in AI"
             target={1182}
             sub="Target: 1,500 by Q2"
-            delay={0.24}
           />
         </div>
       </div>
@@ -359,10 +352,10 @@ export default function ExecutiveSummary() {
 
         <div className="es2-impact-grid">
           {[
-            { c: 'green',  icon: '💰', value: 'AED 4.2M', label: 'Cost Savings Realized',      sub: '+38% vs same period last year', delay: 0    },
-            { c: 'blue',   icon: '⏱', value: '28,400',   label: 'Process Hours Automated',     sub: 'Equivalent to 14.2 FTEs',        delay: 0.08 },
-            { c: 'amber',  icon: '⚡', value: '+34%',     label: 'Operational Efficiency Gain', sub: 'Across automated workflows',     delay: 0.16 },
-            { c: 'purple', icon: '✓',  value: '−62%',     label: 'Error Rate Reduction',        sub: 'In AI-assisted processes',       delay: 0.24 },
+            { c: 'green',  icon: '', value: 'AED 4.2M', label: 'Cost Savings Realized',      sub: '+38% vs same period last year', delay: 0    },
+            { c: 'blue',   icon: '', value: '28,400',   label: 'Process Hours Automated',     sub: 'Equivalent to 14.2 FTEs',        delay: 0.08 },
+            { c: 'amber',  icon: '', value: '+34%',     label: 'Operational Efficiency Gain', sub: 'Across automated workflows',     delay: 0.16 },
+            { c: 'purple', icon: '',  value: '−62%',     label: 'Error Rate Reduction',        sub: 'In AI-assisted processes',       delay: 0.24 },
           ].map(card => (
             <div
               key={card.c}

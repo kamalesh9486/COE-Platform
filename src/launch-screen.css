@@ -240,7 +240,9 @@
   box-shadow: 0 4px 18px rgba(15,23,42,0.22), 0 1px 4px rgba(15,23,42,0.1);
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   overflow: hidden;
-  max-width: 340px;
+  width: fit-content;
+  min-width: 200px;
+  max-width: 280px;
   margin-top: 28px;
   animation: ls-fade-up 0.5s 0.95s both;
   flex-shrink: 0;
@@ -542,29 +544,38 @@
 @media (max-width: 900px) {
   .ls-body { flex-direction: column; }
   .ls-left {
+    flex: none;
     padding: 22px 28px 16px;
     border-right: none;
     border-bottom: 1px solid rgba(15,23,42,0.07);
   }
   .ls-left::before { display: none; }
-  .ls-right { padding: 0; min-height: 260px; }
+  .ls-right { flex: 1; padding: 0; min-height: 220px; }
   .la-cards-area { gap: 6px; padding: 0 8px; }
   .la-card-file     { width: 130px; transform: rotate(-5deg)  translateY(10px); }
   .la-card-progress { width: 155px; transform: rotate(0.5deg) translateY(-8px);  }
   .la-card-context  { width: 130px; transform: rotate(5deg)   translateY(10px); }
   .ls-ht-center, .ls-ht-excellence { font-size: clamp(36px, 8vw, 64px); letter-spacing: -2px; }
   .ls-brand-logo { height: 56px; }
-  .ls-launch-btn { max-width: 100%; }
+  .ls-launch-btn { min-width: 160px; max-width: 240px; }
 }
 @media (max-width: 640px) {
+  .ls-body { flex-direction: column; }
+  .ls-left { padding: 18px 20px 14px; }
   .ls-bottom { flex-direction: column; align-items: stretch; padding: 12px 20px; }
-  .ls-launch-btn { max-width: unset; width: 100%; border-radius: 14px; }
-  .ls-topbar-right .ls-topbar-tag { display: none; }
+  .ls-launch-btn { min-width: unset; max-width: unset; width: 100%; border-radius: 14px; }
   .ls-brand-logo { height: 48px; }
   .ls-bottom-meta { justify-content: center; }
+  .la-cards-area { gap: 4px; padding: 0 6px; }
+  .la-card-file     { width: 110px; }
+  .la-card-progress { width: 130px; }
+  .la-card-context  { width: 110px; }
 }
 @media (max-width: 420px) {
   .ls-left { padding: 14px 16px 10px; }
+  .ls-right { min-height: 180px; }
   .ls-ai-pills .ls-pill { font-size: 10px; padding: 5px 10px; }
   .ls-brand-logo { height: 40px; }
+  .la-card-file, .la-card-context { display: none; }
+  .la-card-progress { width: 180px; }
 }

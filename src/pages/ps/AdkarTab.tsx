@@ -11,11 +11,11 @@ import Icon from '../../components/Icon'
 function mapToAdkarScore(r: Cr978_coe_divisions): AdkarScore {
   return {
     division:      r.cr978_divisionname,
-    awareness:     parseInt(r.cr435_awarenessscore ?? '0', 10) || 0,
-    desire:        parseInt(r.cr435_desirescore    ?? '0', 10) || 0,
-    knowledge:     parseInt(r.cr435_knowledgescore ?? '0', 10) || 0,
-    ability:       parseInt(r.cr435_ability        ?? '0', 10) || 0,
-    reinforcement: parseInt(r.cr435_reinforcement  ?? '0', 10) || 0,
+    awareness:     r.cr435_awarenessscore ?? 0,
+    desire:        r.cr435_desirescore    ?? 0,
+    knowledge:     r.cr435_knowledgescore ?? 0,
+    ability:       r.cr435_ability        ?? 0,
+    reinforcement: r.cr435_reinforcement  ?? 0,
   }
 }
 
