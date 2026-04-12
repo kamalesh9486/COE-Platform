@@ -11,7 +11,7 @@
   flex-direction: column;
   overflow: hidden;
   background: #f0f4f8;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
 }
 
 /* ── Entry animations ───────────────────────────────────────── */
@@ -430,7 +430,7 @@
   color: #fff;
   font-size: 10px;
   font-weight: 500;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   padding: 4px 9px;
   border-radius: 6px;
   white-space: nowrap;

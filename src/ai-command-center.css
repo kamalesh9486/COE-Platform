@@ -200,7 +200,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-btn);
   font-size: 13px;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
   background: var(--surface);
   outline: none;
@@ -246,7 +246,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-btn);
   font-size: 13px;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
   background: var(--surface);
   outline: none;
@@ -276,7 +276,7 @@
   gap: 4px;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   color: var(--dewa-green);
   background: rgba(0,117,96,0.08);
   border: 1px solid rgba(0,117,96,0.15);
@@ -417,7 +417,7 @@
   border-radius: var(--radius-btn);
   font-size: 12.5px;
   font-weight: 700;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   background: var(--dewa-green);
   color: #fff;
   text-decoration: none;

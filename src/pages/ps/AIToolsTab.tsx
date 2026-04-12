@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -6,6 +6,8 @@ import {
 } from 'recharts'
 import { AI_TOOLS, type AITool } from './data'
 import Icon from '../../components/Icon'
+import CopilotKitPanel from '../CopilotKit'
+import { useCopilotData } from '../../context/CopilotDataContext'
 
 // ── Tooltip style ─────────────────────────────────────────────
 const TT_STYLE = {
@@ -192,18 +194,137 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
   )
 }
 
+// ── Live Microsoft Copilot card ───────────────────────────────
+function CopilotLiveCard({ onClick }: { onClick: () => void }) {
+  const { agentDetails: agents, loading } = useCopilotData()
+  const color = '#0078d4'
+
+  const stats = useMemo(() => {
+    const total      = agents.length
+    const published  = agents.filter(a => a.cat_published).length
+    const genAi      = agents.filter(a => a.cat_usesgenai === true).length
+    const withTools  = agents.filter(a => a.cat_usesactions === true).length
+    const envs       = new Set(agents.map(a => a.cat_environmentname ?? 'Unknown')).size
+    const genAiPct   = total > 0 ? Math.round((genAi / total) * 100) : 0
+    const pubPct     = total > 0 ? Math.round((published / total) * 100) : 0
+    return { total, published, genAi, withTools, envs, genAiPct, pubPct }
+  }, [agents])
+
+  return (
+    <div
+      className="ps-tool-card"
+      style={{
+        border: `1.5px solid ${color}44`,
+        cursor: 'pointer',
+        transition: 'box-shadow 0.2s, transform 0.15s, border-color 0.2s',
+        position: 'relative', overflow: 'hidden',
+      }}
+      onClick={onClick}
+      onMouseOver={e => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.boxShadow = `0 8px 28px ${color}33`
+        el.style.borderColor = `${color}88`
+        el.style.transform = 'translateY(-2px)'
+      }}
+      onMouseOut={e => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.boxShadow = ''
+        el.style.borderColor = `${color}44`
+        el.style.transform = ''
+      }}
+    >
+      {/* LIVE badge */}
+      <div style={{
+        position: 'absolute', top: 10, right: 10,
+        background: loading ? '#e5e7eb' : '#dcfce7',
+        color: loading ? '#6b7280' : '#15803d',
+        fontSize: 9, fontWeight: 800, letterSpacing: '0.6px',
+        padding: '2px 7px', borderRadius: 20,
+        display: 'flex', alignItems: 'center', gap: 4,
+      }}>
+        {!loading && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />}
+        {loading ? 'LOADING' : 'LIVE'}
+      </div>
+
+      {/* Top row */}
+      <div className="ps-tool-card-top" style={{ paddingRight: 60 }}>
+        <div className="ps-tool-icon" style={{ background: `${color}15`, color }}>
+          <Icon name="bi-windows" />
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="ps-tool-users" style={{ color }}>
+            {loading ? '—' : stats.total.toLocaleString()}
+          </div>
+          <div className="ps-tool-users-lbl">agents</div>
+        </div>
+      </div>
+
+      {/* Name */}
+      <div className="ps-tool-name">Microsoft Copilot</div>
+
+      {/* Description */}
+      <div className="ps-tool-desc">Copilot Studio agents — live from Power Platform</div>
+
+      {/* Live KPI mini-grid */}
+      {!loading && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '10px 0' }}>
+          {[
+            { label: 'Published',    value: stats.published,  sub: `${stats.pubPct}%`,   icon: 'bi-check2-circle' },
+            { label: 'Uses GenAI',   value: stats.genAi,      sub: `${stats.genAiPct}%`, icon: 'bi-robot' },
+            { label: 'With Tools',   value: stats.withTools,  sub: 'connectors',          icon: 'bi-tools' },
+            { label: 'Environments', value: stats.envs,       sub: 'environments',        icon: 'bi-globe' },
+          ].map(k => (
+            <div key={k.label} style={{
+              background: `${color}07`, borderRadius: 8, padding: '7px 10px',
+              border: `1px solid ${color}15`,
+            }}>
+              <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 2 }}><Icon name={k.icon} style={{ marginRight: 3 }} /> {k.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color, lineHeight: 1 }}>{k.value}</div>
+              <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 1 }}>{k.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Published bar */}
+      {!loading && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', marginBottom: 4 }}>
+            <span>Published rate</span>
+            <span style={{ fontWeight: 600, color }}>{stats.pubPct}%</span>
+          </div>
+          <div style={{ height: 5, background: '#f0f0f0', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${stats.pubPct}%`, background: color, borderRadius: 4, transition: 'width 0.4s ease' }} />
+          </div>
+        </div>
+      )}
+
+      {/* View details hint */}
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5, fontSize: 11, color, fontWeight: 600 }}>
+        View Agent Dashboard <Icon name="bi-arrow-right" style={{ fontSize: 11 }} />
+      </div>
+    </div>
+  )
+}
+
 // ── Main export ───────────────────────────────────────────────
 export default function AIToolsTab() {
-  const [detailTool, setDetailTool] = useState<AITool | null>(null)
+  const [detailTool,        setDetailTool]        = useState<AITool | null>(null)
+  const [copilotOpen,       setCopilotOpen]       = useState(false)
 
   // ── Detail view ──────────────────────────────────────────
+  if (copilotOpen) {
+    return <CopilotKitPanel onBack={() => setCopilotOpen(false)} />
+  }
   if (detailTool) {
     return <ToolDetailView tool={detailTool} onBack={() => setDetailTool(null)} />
   }
 
   // ── Grid view ────────────────────────────────────────────
-  const totalUsers = AI_TOOLS.reduce((s, t) => s + t.users, 0)
-  const topTool    = [...AI_TOOLS].sort((a, b) => b.users - a.users)[0]
+  // Exclude Microsoft Copilot from the static list — it gets its own live card
+  const otherTools = AI_TOOLS.filter(t => t.name !== 'Microsoft Copilot')
+  const totalUsers = otherTools.reduce((s, t) => s + t.users, 0)
+  const topTool    = [...otherTools].sort((a, b) => b.users - a.users)[0]
   const maxUsers   = topTool.users
 
   return (
@@ -231,7 +352,12 @@ export default function AIToolsTab() {
 
       {/* Tools grid */}
       <div className="ps-tools-grid">
-        {AI_TOOLS.map(tool => {
+
+        {/* Microsoft Copilot — live data card (always first) */}
+        <CopilotLiveCard onClick={() => setCopilotOpen(true)} />
+
+        {/* All other tools — static data */}
+        {otherTools.map(tool => {
           const pct = Math.round((tool.users / maxUsers) * 100)
           return (
             <div

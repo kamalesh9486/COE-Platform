@@ -205,7 +205,7 @@ function EventModal({ event: ev, onClose }: { event: AppEvent; onClose: () => vo
                 <div className="modal-meta-cell">
                   <div className="modal-meta-label">Event Code</div>
                   <div className="modal-meta-value">
-                    <code style={{ background: '#f3f4f6', padding: '2px 7px', borderRadius: 5, fontSize: 12, fontFamily: 'monospace', color: '#374151' }}>{ev.eventCode}</code>
+                    <code style={{ background: '#f3f4f6', padding: '2px 7px', borderRadius: 5, fontSize: 12, fontFamily: "'Dubai', 'Segoe UI', system-ui, sans-serif", color: '#374151' }}>{ev.eventCode}</code>
                   </div>
                 </div>
               )}

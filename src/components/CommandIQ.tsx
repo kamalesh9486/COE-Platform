@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import '../command-iq.css'
+import Icon from './Icon'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,12 +28,12 @@ interface AgentResponse {
 // ─── Quick prompts ────────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS = [
-  { icon: '📊', label: 'AI Adoption Rate',       query: 'What is the current AI adoption rate?' },
-  { icon: '🛡️', label: 'Risk & Governance',      query: 'Show me the risk and governance status' },
-  { icon: '💡', label: 'Strategic Roadmap',       query: 'Summarise the strategic roadmap progress' },
-  { icon: '💰', label: 'Finance Overview',        query: 'What is the current budget and spend status?' },
-  { icon: '🎓', label: 'Workforce Readiness',     query: 'How is the AI workforce readiness?' },
-  { icon: '⚡', label: 'Business Impact',         query: 'What is the AI impact and ROI so far?' },
+  { icon: 'bi-bar-chart-line-fill', label: 'AI Adoption Rate',   query: 'What is the current AI adoption rate?' },
+  { icon: 'bi-shield-exclamation',  label: 'Risk & Governance',  query: 'Show me the risk and governance status' },
+  { icon: 'bi-rocket-takeoff',      label: 'Strategic Roadmap',  query: 'Summarise the strategic roadmap progress' },
+  { icon: 'bi-currency-dirham',     label: 'Finance Overview',   query: 'What is the current budget and spend status?' },
+  { icon: 'bi-people-fill',         label: 'Workforce Readiness',query: 'How is the AI workforce readiness?' },
+  { icon: 'bi-graph-up-arrow',      label: 'Business Impact',    query: 'What is the AI impact and ROI so far?' },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,12 +67,16 @@ export default function CommandIQ() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, thinking])
 
-  // Focus input when opened
+  // Focus input when opened + lock background scroll
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 320)
       setUnread(0)
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
     }
+    return () => { document.body.style.overflow = '' }
   }, [open])
 
   // Typewriter streamer
@@ -288,7 +293,7 @@ export default function CommandIQ() {
                     className="ciq-quick-btn"
                     onClick={() => sendMessage(p.query)}
                   >
-                    <span className="ciq-quick-icon">{p.icon}</span>
+                    <span className="ciq-quick-icon"><Icon name={p.icon} /></span>
                     <span className="ciq-quick-label">{p.label}</span>
                   </button>
                 ))}
@@ -373,7 +378,7 @@ export default function CommandIQ() {
             <div className="ciq-suggestion-strip">
               {QUICK_PROMPTS.slice(0, 3).map(p => (
                 <button key={p.label} className="ciq-suggestion-chip" onClick={() => sendMessage(p.query)}>
-                  {p.icon} {p.label}
+                  <Icon name={p.icon} /> {p.label}
                 </button>
               ))}
             </div>

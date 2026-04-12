@@ -66,7 +66,7 @@
 
 /* ── Cell elements ── */
 .inc-ticket-code {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif; font-size: 11px;
   color: #007560; background: rgba(0,117,96,0.08);
   padding: 2px 7px; border-radius: 5px; white-space: nowrap;
 }
@@ -162,7 +162,7 @@
   gap: 12px; margin-bottom: 12px;
 }
 .inc-modal-ticket {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif; font-size: 11px;
   color: #007560; background: rgba(0,117,96,0.1);
   padding: 2px 8px; border-radius: 5px; display: inline-block; margin-bottom: 6px;
 }

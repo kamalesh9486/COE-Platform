@@ -174,7 +174,7 @@
 .dc-d2d-link-row { display: flex; align-items: center; gap: 8px; background: rgba(0,73,55,0.05); border: 1px solid rgba(0,73,55,0.15); border-radius: 10px; padding: 10px 14px; flex-wrap: wrap; font-size: 12px; color: #374151; }
 .dc-d2d-link-row i { color: #004937; font-size: 16px; }
 .dc-d2d-link-row span:first-of-type { font-weight: 600; white-space: nowrap; color: #1c1c1e; }
-.dc-d2d-url { flex: 1; font-size: 12px; color: #a8a29e; word-break: break-all; font-family: 'Consolas', monospace; }
+.dc-d2d-url { flex: 1; font-size: 12px; color: #a8a29e; word-break: break-all; font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif; }
 .dc-open-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 8px; background: linear-gradient(135deg, rgba(0,117,96,0.12), rgba(0,73,55,0.08)); border: 1px solid rgba(0,117,96,0.22); color: #007560; font-size: 12px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: all 0.18s; box-shadow: 0 2px 8px rgba(0,117,96,0.08); }
 .dc-open-btn:hover { box-shadow: 0 4px 14px rgba(0,117,96,0.15); border-color: rgba(0,117,96,0.35); }
 

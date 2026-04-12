@@ -55,7 +55,7 @@
 body {
   margin: 0;
   background: var(--bg);
-  font-family: 'Dubai', system-ui, -apple-system, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -184,7 +184,7 @@ body {
   width: calc(100% - 12px);
   margin: 1px 6px 1px 6px;
   text-align: left;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 13.5px; font-weight: 400;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -237,7 +237,7 @@ body {
   cursor: pointer; border: none; background: none;
   width: calc(100% - 12px); margin: 0 6px;
   text-align: left;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 12.5px;
   transition: all 0.18s; white-space: nowrap;
   border-radius: 8px;
@@ -320,7 +320,7 @@ body {
 .topbar-toggle:hover { background: #f0faf7; color: #007560; border-color: rgba(0,117,96,0.3); }
 
 .topbar-page-title {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 17px; font-weight: 700; letter-spacing: -0.2px;
   background: linear-gradient(90deg, #007560, #004937);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
@@ -339,7 +339,7 @@ body {
 
 .page-header { margin-bottom: 28px; }
 .page-header h1 {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.3px;
   background: linear-gradient(90deg, #007560 0%, #004937 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
@@ -373,7 +373,7 @@ body {
 }
 .stat-card .stat-icon.gold { background: rgba(202,138,4,0.1); color: var(--dewa-gold); border-color: rgba(202,138,4,0.2); }
 .stat-card .stat-value {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 28px; font-weight: 700; color: #1c1c1e; line-height: 1; margin-bottom: 4px;
 }
 .stat-card .stat-label { font-size: 13px; color: var(--text-muted); }
@@ -393,7 +393,7 @@ body {
   border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 .content-card h2 {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 15px; font-weight: 700; color: #1c1c1e;
   margin: 0 0 16px; padding-bottom: 12px;
   border-bottom: 1px solid rgba(0,117,96,0.1);

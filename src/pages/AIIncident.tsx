@@ -239,7 +239,7 @@ function IncidentModal({ inc, onClose, allTypes }: { inc: AIIncidentRecord; onCl
           <div className="inc-meta-grid">
             <div className="inc-meta-cell">
               <div className="inc-meta-label">Ticket No</div>
-              <div className="inc-meta-value" style={{ fontFamily: 'ui-monospace,Consolas,monospace', fontSize: 12 }}>{inc.ticketNo}</div>
+              <div className="inc-meta-value" style={{ fontFamily: "'Dubai', 'Segoe UI', system-ui, sans-serif", fontSize: 12 }}>{inc.ticketNo}</div>
             </div>
             <div className="inc-meta-cell">
               <div className="inc-meta-label">Happened On</div>
@@ -266,7 +266,10 @@ function IncidentModal({ inc, onClose, allTypes }: { inc: AIIncidentRecord; onCl
             <div className="inc-meta-cell">
               <div className="inc-meta-label">Data Risk</div>
               <div className="inc-meta-value" style={{ color: inc.dataRisk ? '#dc2626' : '#007560' }}>
-                {inc.dataRisk ? '⚠ Yes' : '✓ No'}
+                {inc.dataRisk
+                  ? <><Icon name="bi-exclamation-triangle-fill" style={{ marginRight: 4 }} />Yes</>
+                  : <><Icon name="bi-check-circle-fill" style={{ marginRight: 4 }} />No</>
+                }
               </div>
             </div>
             <div className="inc-meta-cell" style={{ gridColumn: '1 / -1' }}>

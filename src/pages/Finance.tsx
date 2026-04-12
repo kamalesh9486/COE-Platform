@@ -433,8 +433,8 @@ export default function Finance() {
                       <div className="fin-amount">{fmtM(d.forecastM)}</div>
                       <div className="fin-amount-sub">
                         {d.forecastM > d.budgetM
-                          ? <span style={{ color: '#dc2626' }}>▲ AED {(d.forecastM - d.budgetM).toFixed(1)}M over</span>
-                          : <span style={{ color: '#007560' }}>▼ AED {(d.budgetM - d.forecastM).toFixed(1)}M under</span>
+                          ? <span style={{ color: '#dc2626' }}><Icon name="bi-caret-up-fill" style={{ marginRight: 2 }} />AED {(d.forecastM - d.budgetM).toFixed(1)}M over</span>
+                          : <span style={{ color: '#007560' }}><Icon name="bi-caret-down-fill" style={{ marginRight: 2 }} />AED {(d.budgetM - d.forecastM).toFixed(1)}M under</span>
                         }
                       </div>
                     </td>

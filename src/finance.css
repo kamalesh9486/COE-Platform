@@ -83,7 +83,7 @@
   font-weight: 600; color: #1c1c1e; font-size: 13px; line-height: 1.3;
 }
 .fin-division-code {
-  font-size: 10px; color: #a8a29e; font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px; color: #a8a29e; font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   margin-top: 1px;
 }
 .fin-amount {
@@ -128,7 +128,7 @@
 .fin-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
 .fin-card-name-wrap {}
 .fin-card-name { font-size: 14px; font-weight: 700; color: #1c1c1e; }
-.fin-card-code { font-size: 10px; color: #a8a29e; font-family: ui-monospace, Consolas, monospace; margin-top: 2px; }
+.fin-card-code { font-size: 10px; color: #a8a29e; font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif; margin-top: 2px; }
 .fin-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .fin-card-cell {}
 .fin-card-cell-label { font-size: 10px; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }

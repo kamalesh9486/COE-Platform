@@ -77,7 +77,7 @@
 }
 
 .ciq-trigger-label {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 10px;
   font-weight: 700;
   color: #007560;
@@ -203,7 +203,7 @@
 }
 
 .ciq-header-title {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: #fff;
@@ -302,7 +302,7 @@
 }
 
 .ciq-welcome-title {
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 18px;
   font-weight: 700;
   color: #fff;
@@ -548,7 +548,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: 10px 14px;
-  font-family: 'Dubai', system-ui, sans-serif;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 13px;
   color: rgba(255,255,255,0.88);
   outline: none;

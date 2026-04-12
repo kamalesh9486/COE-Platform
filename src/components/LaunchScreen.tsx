@@ -126,7 +126,7 @@ function LaunchAnim() {
       background: '#ffffff',
       border: `1px solid ${active ? 'rgba(0,117,96,0.4)' : 'rgba(0,117,96,0.14)'}`,
       padding: 14,
-      fontFamily: "'Dubai', system-ui, sans-serif",
+      fontFamily: "'Dubai', 'Segoe UI', system-ui, sans-serif",
       boxShadow: active
         ? '0 18px 48px rgba(0,117,96,0.2), 0 4px 12px rgba(0,0,0,0.08)'
         : '0 4px 16px rgba(0,117,96,0.08), 0 1px 4px rgba(0,0,0,0.05)',
