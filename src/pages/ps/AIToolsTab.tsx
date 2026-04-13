@@ -260,7 +260,7 @@ function CopilotLiveCard({ onClick }: { onClick: () => void }) {
       </div>
 
       {/* Name */}
-      <div className="ps-tool-name">Microsoft Copilot</div>
+      <div className="ps-tool-name">Microsoft Copilot Agents</div>
 
       {/* Description */}
       <div className="ps-tool-desc">Copilot Studio agents — live from Power Platform</div>

@@ -246,7 +246,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
           <Icon name="bi-windows" />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Microsoft Copilot</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Microsoft Copilot Agents</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>
             Copilot Studio agent analytics — live from Power Platform
           </div>
@@ -345,43 +345,6 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
               </ResponsiveContainer>
             </div>
           )}
-
-          {/* Environments — horizontal bar chart */}
-          {envData.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: `1px solid ${B}18`, boxShadow: `0 2px 12px ${B}0a` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1c1c1e' }}>Agents by Environment</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 14 }}>
-                Distribution across Power Platform environments — total vs published
-              </div>
-              <ResponsiveContainer width="100%" height={envChartHeight}>
-                <BarChart
-                  data={envData}
-                  layout="vertical"
-                  margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
-                  barSize={14}
-                  barGap={3}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#374151' }} axisLine={false} tickLine={false} width={130} />
-                  <Tooltip contentStyle={TT} />
-                  <Bar dataKey="count"     name="Total Agents" fill={`${B}cc`} radius={[0,5,5,0]}>
-                    <LabelList dataKey="count" position="right" style={{ fontSize: 11, fontWeight: 700, fill: '#374151' }} />
-                  </Bar>
-                  <Bar dataKey="published" name="Published"    fill={`${G}cc`} radius={[0,5,5,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-                {[{ color: `${B}cc`, label: 'Total Agents' }, { color: `${G}cc`, label: 'Published' }].map(leg => (
-                  <div key={leg.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: leg.color, flexShrink: 0 }} />
-                    <span style={{ color: '#4b5563' }}>{leg.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* ═══════════════ VALUE INTELLIGENCE DIVIDER ═══════════════ */}
           {agentValues.length > 0 && (
             <>
