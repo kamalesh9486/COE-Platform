@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import '../command-iq.css'
 import Icon from './Icon'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -17,8 +18,10 @@ interface Message {
 
 // ─── API ─────────────────────────────────────────────────────────────────────
 
-const AGENT_ENDPOINT =
-  'https://07da63428cc4e81c95fa9ce24e7c2f.46.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/21e13c7899344a76a67304c1706c24e4/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2udaarIz0O3HwQzWZhULNKBFRoJjIOj79s0KzeiQ630'
+const AGENT_ENDPOINT = import.meta.env.VITE_AGENT_ENDPOINT as string | undefined
+if (!AGENT_ENDPOINT && import.meta.env.DEV) {
+  console.warn('[CommandIQ] VITE_AGENT_ENDPOINT is not set — chat will not work. Add it to .env.local')
+}
 
 interface AgentResponse {
   response: string
@@ -42,10 +45,22 @@ function fmtTime(d: Date) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-function parseMarkdown(text: string) {
-  // Bold **text**
-  return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-             .replace(/\n/g, '<br/>')
+/**
+ * Convert the limited markdown subset the AI returns to safe HTML.
+ * Only <strong> and <br> are allowed — all other HTML is escaped first,
+ * so there is no XSS risk from AI-generated or user-supplied content.
+ */
+function parseMarkdown(text: string): string {
+  // 1. Escape any HTML that may already be in the text
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+  // 2. Apply our intentional markdown transforms on the now-safe string
+  return escaped
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br/>')
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -57,27 +72,32 @@ export default function CommandIQ() {
   const [input, setInput]         = useState('')
   const [thinking, setThinking]   = useState(false)
   const [unread, setUnread]       = useState(0)
+  const [copiedId, setCopiedId]   = useState<string | null>(null)
   const bottomRef               = useRef<HTMLDivElement>(null)
   const inputRef                = useRef<HTMLInputElement>(null)
   const streamRef               = useRef<ReturnType<typeof setInterval> | null>(null)
   const conversationIdRef       = useRef<string>('New')
+
+  // Clear stream interval on unmount to prevent memory leak
+  useEffect(() => {
+    return () => { if (streamRef.current) clearInterval(streamRef.current) }
+  }, [])
 
   // Auto-scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, thinking])
 
-  // Focus input when opened + lock background scroll
+  // Focus input when opened
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 320)
       setUnread(0)
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
   }, [open])
+
+  // Lock background scroll while panel is open (conditional, reference-counted)
+  useScrollLock(open)
 
   // Typewriter streamer
   const streamMessage = useCallback((id: string, fullText: string) => {
@@ -113,6 +133,7 @@ export default function CommandIQ() {
     setThinking(true)
 
     try {
+      if (!AGENT_ENDPOINT) throw new Error('VITE_AGENT_ENDPOINT not configured')
       const res = await fetch(AGENT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,8 +183,14 @@ export default function CommandIQ() {
     }
   }
 
-  function handleCopy(text: string) {
-    navigator.clipboard.writeText(text.replace(/<[^>]+>/g, '').replace(/\*\*/g, ''))
+  function handleCopy(msgId: string, text: string) {
+    const plain = text.replace(/<[^>]+>/g, '').replace(/\*\*/g, '')
+    navigator.clipboard.writeText(plain)
+      .then(() => {
+        setCopiedId(msgId)
+        setTimeout(() => setCopiedId(id => id === msgId ? null : id), 2000)
+      })
+      .catch(() => console.warn('[CommandIQ] Clipboard write failed'))
   }
 
   const isEmpty = messages.length === 0
@@ -233,6 +260,7 @@ export default function CommandIQ() {
               <button
                 className="ciq-icon-btn"
                 title="New conversation"
+                aria-label="Start new conversation"
                 onClick={() => { setMessages([]); conversationIdRef.current = 'New' }}
               >
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
@@ -241,7 +269,7 @@ export default function CommandIQ() {
                 </svg>
               </button>
             )}
-            <button className="ciq-icon-btn" title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'} onClick={() => setFullscreen(f => !f)}>
+            <button className="ciq-icon-btn" title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'} aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} onClick={() => setFullscreen(f => !f)}>
               {fullscreen ? (
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5m5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5M0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5m10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0z"/>
@@ -252,7 +280,7 @@ export default function CommandIQ() {
                 </svg>
               )}
             </button>
-            <button className="ciq-icon-btn" title="Close" onClick={() => setOpen(false)}>
+            <button className="ciq-icon-btn" title="Close" aria-label="Close Command IQ" onClick={() => setOpen(false)}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
               </svg>
@@ -333,11 +361,22 @@ export default function CommandIQ() {
                 <div className="ciq-msg-foot">
                   <span className="ciq-msg-time">{fmtTime(msg.time)}</span>
                   {msg.role === 'ai' && msg.done && (
-                    <button className="ciq-copy-btn" title="Copy" onClick={() => handleCopy(msg.text)}>
-                      <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
-                      </svg>
-                      Copy
+                    <button
+                      className="ciq-copy-btn"
+                      title={copiedId === msg.id ? 'Copied!' : 'Copy'}
+                      aria-label={copiedId === msg.id ? 'Copied to clipboard' : 'Copy message'}
+                      onClick={() => handleCopy(msg.id, msg.text)}
+                    >
+                      {copiedId === msg.id ? (
+                        <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
+                        </svg>
+                      ) : (
+                        <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                        </svg>
+                      )}
+                      {copiedId === msg.id ? 'Copied!' : 'Copy'}
                     </button>
                   )}
                 </div>

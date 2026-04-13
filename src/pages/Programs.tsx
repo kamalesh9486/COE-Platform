@@ -4,6 +4,7 @@ import { Cr978_coe_programsService, Cr978_coe_eventsesService } from '../generat
 import type { Cr978_coe_programs, Cr978_coe_programsBase } from '../generated/models/Cr978_coe_programsModel'
 import '../programs.css'
 import Icon from '../components/Icon'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 // ── Map Dataverse record → Program ───────────────────────────
 function mapToProgram(r: Cr978_coe_programs): Program {
@@ -34,10 +35,6 @@ interface Props {
 function formatDateShort(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
-function initials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-}
-
 // ── Status helpers ───────────────────────────────────────────
 function statusClass(s: ProgramStatus) {
   return s === 'Active' ? 'active' : s === 'Completed' ? 'completed' : 'upcoming'
@@ -57,15 +54,6 @@ function StatusBadge({ status }: { status: ProgramStatus }) {
 
 // ── Program Card ─────────────────────────────────────────────
 function ProgramCard({ program, onViewDetails }: { program: Program; onViewDetails: (p: Program) => void }) {
-  const eventType = (t: string) => {
-    if (t === 'Workshop') return 'ev-type-workshop'
-    if (t === 'Seminar')  return 'ev-type-seminar'
-    if (t === 'Hackathon') return 'ev-type-hackathon'
-    if (t === 'Webinar')  return 'ev-type-webinar'
-    return 'ev-type-town-hall'
-  }
-  void eventType
-
   return (
     <div className={`prog-card ${borderClass(program.status)}`}>
       <div className="prog-card-head">
@@ -120,10 +108,7 @@ function AddProgramModal({ onClose, onCreated }: {
   onClose: () => void
   onCreated: (p: Program) => void
 }) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useScrollLock()
   const [form, setForm] = useState<AddProgramForm>(EMPTY_FORM)
   const [errors, setErrors] = useState<Partial<AddProgramForm>>({})
   const [saving, setSaving] = useState(false)
@@ -320,27 +305,41 @@ export default function Programs({ onNavigateToEvents }: Props) {
   const [showAddModal, setShowAddModal] = useState(false)
 
   useEffect(() => {
-    Cr978_coe_programsService.getAll().then(result => {
-      if (result.data) setPrograms(result.data.map(mapToProgram))
-    }).catch((err: unknown) => {
-      console.error('Failed to load programs', err)
-      setError('Failed to load programs from Dataverse.')
-    }).finally(() => setLoading(false))
+    let active = true
+    Cr978_coe_programsService.getAll()
+      .then(result => {
+        if (!active) return
+        if (result.data) setPrograms(result.data.map(mapToProgram))
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[Programs] Failed to load programs:', msg)
+        setError('Failed to load programs from Dataverse.')
+      })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
-    Cr978_coe_eventsesService.getAll().then(result => {
-      if (!result.data) return
-      setTotalEvents(result.data.length)
-      const countMap = new Map<string, number>()
-      for (const ev of result.data) {
-        const pid = ev._cr978_coe_program_value
-        if (pid) countMap.set(pid, (countMap.get(pid) ?? 0) + 1)
-      }
-      setPrograms(prev => prev.map(p => ({ ...p, eventCount: countMap.get(p.id) ?? 0 })))
-    }).catch((err: unknown) => {
-      console.error('Failed to load events for program counts', err)
-    })
+    let active = true
+    Cr978_coe_eventsesService.getAll()
+      .then(result => {
+        if (!active || !result.data) return
+        setTotalEvents(result.data.length)
+        const countMap = new Map<string, number>()
+        for (const ev of result.data) {
+          const pid = ev._cr978_coe_program_value
+          if (pid) countMap.set(pid, (countMap.get(pid) ?? 0) + 1)
+        }
+        setPrograms(prev => prev.map(p => ({ ...p, eventCount: countMap.get(p.id) ?? 0 })))
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[Programs] Failed to load event counts:', msg)
+      })
+    return () => { active = false }
   }, [])
 
   const divisions = ['All', ...Array.from(new Set(programs.map(p => p.ownerDivision))).sort()]
@@ -471,5 +470,3 @@ export default function Programs({ onNavigateToEvents }: Props) {
   )
 }
 
-// suppress unused import warning
-void initials

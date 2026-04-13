@@ -5,6 +5,7 @@ import type { Cr978_coe_eventses } from '../generated/models/Cr978_coe_eventsesM
 import CalendarView from './prog/CalendarView'
 import '../programs.css'
 import Icon from '../components/Icon'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 // ── Map Dataverse record → AppEvent ──────────────────────────
 function mapToAppEvent(r: Cr978_coe_eventses, divisionMap: Map<string, string>): AppEvent {
@@ -120,10 +121,7 @@ function StatusBadge({ status }: { status: EventStatus }) {
 
 // ── Event Modal ──────────────────────────────────────────────
 function EventModal({ event: ev, onClose }: { event: AppEvent; onClose: () => void }) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useScrollLock()
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-panel" onClick={e => e.stopPropagation()}>
@@ -502,7 +500,7 @@ export default function Events({ fromProgram, onBackToPrograms }: EventsProps = 
       })
       if (eventsResult.data) setEvents(eventsResult.data.map(r => mapToAppEvent(r, divisionMap)))
     }).catch((err: unknown) => {
-      console.error('Failed to load events', err)
+      console.error('[Events] Failed to load events:', err instanceof Error ? err.message : String(err))
       setError('Failed to load events from Dataverse.')
     }).finally(() => setLoading(false))
   }, [])

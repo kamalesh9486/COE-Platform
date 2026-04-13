@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-const ENDPOINT =
-  'https://07da63428cc4e81c95fa9ce24e7c2f.46.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9a88f1c452a44be38a30f46d48b6942d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=YJw_bB5ij3YQCJLdnatTJynZZEPqw9rwwwX_-Y__Jgs'
+const ENDPOINT = import.meta.env.VITE_COPILOT_ENDPOINT as string | undefined
+if (!ENDPOINT && import.meta.env.DEV) {
+  console.warn('[CopilotData] VITE_COPILOT_ENDPOINT is not set — agent data will not load. Add it to .env.local')
+}
 
 // ── Shapes ────────────────────────────────────────────────────
 export interface AgentDetail {
@@ -62,6 +64,7 @@ export function CopilotDataProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       setError(null)
       try {
+        if (!ENDPOINT) throw new Error('VITE_COPILOT_ENDPOINT not configured')
         const res = await fetch(ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

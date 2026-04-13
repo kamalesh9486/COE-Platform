@@ -86,8 +86,8 @@ export default function SkillsTab() {
         })}
       </div>
 
-      {/* Bar chart */}
-      <div className="ps-card">
+      {/* Bar chart — overflow:visible lets the Recharts tooltip escape the card clip */}
+      <div className="ps-card" style={{ overflow: 'visible' }}>
         <div className="ps-card-header">
           <span className="ps-card-title"><Icon name="bi-bar-chart-horizontal-fill" /> Skill Frequency by Employee Count</span>
           <div className="ps-cat-filters">

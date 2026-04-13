@@ -10,8 +10,10 @@ import { useCopilotData } from '../context/CopilotDataContext'
 // ── Style constants ────────────────────────────────────────────
 const TT = {
   background: 'rgba(28,28,30,0.93)', border: 'none',
-  borderRadius: 9, padding: '8px 14px', fontSize: 12,
-} as const
+  borderRadius: 9, padding: '8px 14px', fontSize: 12, color: '#fff',
+}
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
 
 const G   = '#007560'
 const B   = '#0078d4'
@@ -39,6 +41,21 @@ const BENEFIT_PALETTE = [
   '#007560', '#0078d4', '#8b5cf6', '#f59e0b',
   '#ef4444', '#10b981', '#06b6d4', '#ec4899',
 ]
+
+// ── Benefit distribution tooltip ──────────────────────────────
+function BenefitTip({ active, payload, label }: {
+  active?: boolean
+  payload?: { value: number; payload: { name: string } }[]
+  label?: string
+}) {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={TT}>
+      <div style={TT_LABEL}>{label}</div>
+      <div style={{ ...TT_ITEM, fontSize: 13 }}>{payload[0].value} agents</div>
+    </div>
+  )
+}
 
 // ── Reusable sub-components ────────────────────────────────────
 
@@ -106,7 +123,7 @@ function PieCard({ title, subtitle, yes, no, colorYes, labelYes, labelNo }: {
             <Cell fill={colorYes} />
             <Cell fill={GREY} />
           </Pie>
-          <Tooltip contentStyle={TT} />
+          <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
         </PieChart>
       </ResponsiveContainer>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -165,17 +182,6 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
     return sorted.map(r => { acc += r.count; return { ...r, accumulativeCount: acc } })
   }, [agents])
 
-  const envData = useMemo(() => {
-    const map: Record<string, { name: string; count: number; published: number }> = {}
-    agents.forEach(a => {
-      const env = (a.cat_environmentname as string | undefined) ?? 'Unknown'
-      if (!map[env]) map[env] = { name: env, count: 0, published: 0 }
-      map[env].count++
-      if (a.cat_published) map[env].published++
-    })
-    return Object.values(map).sort((a, b) => b.count - a.count)
-  }, [agents])
-
   // ── agentValues derivations ──
   const gloTotalAgents    = agentValues.length
   const allAgentsCount    = agents.length
@@ -202,7 +208,6 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
   const topTypePct     = gloTotalAgents > 0 ? Math.round((topType?.value     ?? 0) / gloTotalAgents * 100) : 0
   const topBehaviorPct = gloTotalAgents > 0 ? Math.round((topBehavior?.value ?? 0) / gloTotalAgents * 100) : 0
 
-  const envChartHeight = Math.max(160, envData.length * 38 + 48)
   const benefitChartHeight = Math.max(180, benefitData.length * 44 + 48)
 
   return (
@@ -338,7 +343,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis yAxisId="left"  tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={TT} />
+                  <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
                   <Bar  yAxisId="left"  dataKey="count"             name="New Agents" fill={G} radius={[5,5,0,0]} opacity={0.85} />
                   <Line yAxisId="right" dataKey="accumulativeCount" name="Cumulative" stroke={B} strokeWidth={2.5} type="monotone" dot={{ fill: B, r: 3 }} activeDot={{ r: 5 }} />
                 </ComposedChart>
@@ -421,7 +426,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                         <Cell fill={B} />
                         <Cell fill={GREY} />
                       </Pie>
-                      <Tooltip contentStyle={TT} />
+                      <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -451,7 +456,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                         <Cell fill={G} />
                         <Cell fill={GREY} />
                       </Pie>
-                      <Tooltip contentStyle={TT} />
+                      <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -490,7 +495,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                           <Cell key={entry.name} fill={TYPE_COLORS[entry.name] ?? '#94a3b8'} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={TT} />
+                      <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 10px', justifyContent: 'center' }}>
@@ -512,7 +517,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
                       <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#374151' }} axisLine={false} tickLine={false} width={76} />
-                      <Tooltip contentStyle={TT} />
+                      <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
                       <Bar dataKey="value" radius={[0, 5, 5, 0]} name="Agents">
                         {behaviorData.map(entry => (
                           <Cell key={entry.name} fill={BEHAVIOR_COLORS[entry.name] ?? '#94a3b8'} />
@@ -566,7 +571,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                       axisLine={false} tickLine={false}
                       width={160}
                     />
-                   
+                    <Tooltip content={<BenefitTip />} cursor={{ fill: 'rgba(0,117,96,0.05)' }} />
                     <Bar dataKey="value" radius={[0, 8, 8, 0]} name="Agents">
                       {benefitData.map((entry, i) => (
                         <Cell

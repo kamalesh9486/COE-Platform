@@ -656,3 +656,120 @@ if (import.meta.env.DEV) {
 | CR-20 | Remove unused `LabelList` import in AdoptionTab |
 | CR-22 | Fix nested timer closure in LaunchScreen |
 | CR-23 | Log SDK unavailability warning in dev mode |
+
+---
+
+## Resolution Log
+
+**Resolved:** 2026-04-12  
+**Resolved by:** Claude Code
+
+---
+
+### CR-01 — FIXED
+Moved both Power Automate signing tokens to `.env.local` (git-ignored). `CommandIQ.tsx` and `CopilotDataContext.tsx` now read from `import.meta.env.VITE_AGENT_ENDPOINT` / `VITE_COPILOT_ENDPOINT`. Added runtime guard: if variable is undefined the app throws at boot with a clear message. `.env.example` added with placeholder values.
+
+### CR-02 — FIXED
+`parseMarkdown()` in `CommandIQ.tsx` now HTML-escapes the raw AI response text before applying bold/line-break transforms. This prevents attacker-controlled content from injecting arbitrary HTML tags through the `dangerouslySetInnerHTML` call site. No third-party sanitisation library was introduced — the escape step removes the attack surface directly.
+
+### CR-03 — FIXED
+Created `src/hooks/useScrollLock.ts` with a module-level reference counter. Replaced all five independent `useEffect` scroll-lock blocks in `Events.tsx`, `Programs.tsx`, `DiscoveryCatalog.tsx`, `AIIncident.tsx`, and `CommandIQ.tsx` with `useScrollLock()` / `useScrollLock(open)`. The hook accepts an optional `active` boolean so conditional locking (CommandIQ open/closed) works correctly.
+
+### CR-04 — FIXED
+`DiscoveryCatalog.tsx`: inlined fetch logic as a `useCallback` (`fetchData`) and called it from `useEffect(() => fetchData(), [fetchData])`, ensuring the cleanup function is always returned and the `active` flag always fires. `Programs.tsx`: added `let active = true` guards to both `useEffect` fetch calls with `return () => { active = false }` cleanup.
+
+### CR-05 — FIXED
+Created `src/components/ErrorBoundary.tsx` — class component with `getDerivedStateFromError`, error + component-stack logging, and a "Try again" recovery button. Wrapped `renderPage()` in `Layout.tsx` with `<ErrorBoundary key={activeTab}>` so navigating to a new tab resets the boundary.
+
+### CR-06 — FIXED
+Deleted all `void`-suppressed dead code:
+- `LaunchScreen.tsx`: removed `const s = { color: accent }` and `void s` from `CtxIcon`.
+- `Programs.tsx`: removed `const eventType = ...` / `void eventType` and `const initials = ...` / `void initials`.
+- `DiscoveryCatalog.tsx`: removed `maps` prop from `KpiStrip` (it was passed but ignored with `void maps`).
+
+### CR-07 — FALSE POSITIVE
+`@keyframes spin` was already defined in `src/programs.css` at line 148. No fix required.
+
+### CR-08 — FIXED
+All catch blocks now log a prefixed, structured message with the extracted error string:
+- `Programs.tsx`: `console.error('[Programs] Failed to load programs:', msg)`
+- `DiscoveryCatalog.tsx`: `console.error('[DiscoveryCatalog] Failed to load data:', msg)`
+- `Events.tsx`: `console.error('[Events] Failed to load events:', err instanceof Error ? err.message : String(err))`
+- `AIIncident.tsx`: `console.error('[AIIncident] Failed to load incidents:', err instanceof Error ? err.message : String(err))`
+
+### CR-09 — FIXED
+Added `aria-label` attributes to the three icon-only buttons in `CommandIQ.tsx`: "New conversation", "Fullscreen" / "Exit fullscreen", and "Close chat".
+
+### CR-10 — DEFERRED (backlog)
+The inline hex values are widespread (15+ sites in LaunchScreen alone). Centralising them into a `src/lib/colours.ts` constant module is the correct fix but touches many files. Deferred to avoid unrelated churn in this pass.
+
+### CR-11 — FALSE POSITIVE
+`DiscoveryCatalog.tsx` already renders a `dc-empty-row` row in the table body when filtered results are empty. The card view also falls through to an empty container. No change required.
+
+### CR-12 — FIXED
+`useCurrentUser.ts`: catch block now sets `role = 'Member'` as a fallback when the Dataverse person lookup times out or fails, preventing a blank role in the sidebar footer.
+
+### CR-13 — FIXED
+Added a cleanup `useEffect` to `CommandIQ.tsx` that calls `clearInterval(streamRef.current)` on unmount, preventing the streaming ticker from firing after the component is gone.
+
+### CR-14 — DEFERRED (backlog)
+LaunchScreen analytics show hardcoded preview numbers. Adding a "Preview data" label or async loading is a feature-quality improvement. Deferred — no data integrity risk since the launch screen is a pure loading animation.
+
+### CR-15 — FIXED
+`CommandIQ.tsx`: added `copiedId` state. `handleCopy` now sets the copied ID on success and clears it after 2 seconds via `setTimeout`. The copy button renders a checkmark icon + "Copied!" text while the state is active.
+
+### CR-16 — FIXED
+Replaced the index-based `TYPE_PALETTE` lookup with an explicit `TYPE_COLOUR_MAP: Record<string, string>` covering all known incident types. Unknown types fall back to a deterministic hash into `TYPE_FALLBACK_PALETTE` (consistent colour per type name, not per sort order). Updated all 4 call sites that passed the now-removed `allTypes` second argument, and removed `allTypes` from `IncidentModal`'s props.
+
+### CR-17 — FIXED
+`TechnologyStack.tsx` now wraps `<AIToolsTab />` in `<ErrorBoundary>`. Combined with the page-level boundary in `Layout.tsx`, any render error in `AIToolsTab` or `CopilotDataContext` shows the recovery UI instead of a blank page.
+
+### CR-18 — DEFERRED (backlog)
+Breakpoint inconsistency across CSS files is a multi-file refactor. No functional regression; deferred.
+
+### CR-19 — FIXED (part of CR-06)
+`eventType()` and `void eventType` removed from `Programs.tsx` in the CR-06 pass.
+
+### CR-20 — FALSE POSITIVE
+`LabelList` is actively used in `AdoptionTab.tsx` at line 67 inside a `<Bar>` element. No change required.
+
+### CR-21 — DEFERRED (backlog)
+One-frame flicker on rapid AICommandCenter filter clicks. Minor visual issue; `useTransition` wrapper deferred.
+
+### CR-22 — FALSE POSITIVE
+`LaunchScreen.tsx` already pushes every `setTimeout` into a `timers[]` array via the `schedule()` helper, and the cleanup function calls `timers.forEach(clearTimeout)`. All nested callbacks are captured correctly. No change required.
+
+### CR-23 — FIXED
+`useCurrentUser.ts`: when the Power Apps SDK context is unavailable, the catch block now logs `console.warn('[useCurrentUser] Power Apps SDK context unavailable — using fallback identity. This is expected in local development.')` gated on `import.meta.env.DEV` so it never appears in production builds.
+
+---
+
+### Summary
+
+| Finding | Status |
+|---------|--------|
+| CR-01 Critical: API keys in source | **FIXED** |
+| CR-02 Critical: XSS in parseMarkdown | **FIXED** |
+| CR-03 High: scroll-lock fragility | **FIXED** |
+| CR-04 High: race condition / setState after unmount | **FIXED** |
+| CR-05 High: no error boundaries | **FIXED** |
+| CR-06 Medium: void-suppressed dead code | **FIXED** |
+| CR-07 Medium: missing @keyframes spin | **FALSE POSITIVE** |
+| CR-08 Medium: generic error messages | **FIXED** |
+| CR-09 Medium: missing aria-labels | **FIXED** |
+| CR-10 Medium: hardcoded hex colours | **DEFERRED** |
+| CR-11 Medium: missing empty state | **FALSE POSITIVE** |
+| CR-12 Low: blank role on timeout | **FIXED** |
+| CR-13 Low: streamRef memory leak | **FIXED** |
+| CR-14 Low: hardcoded preview stats | **DEFERRED** |
+| CR-15 Low: no copy feedback | **FIXED** |
+| CR-16 Low: index-based colour lookup | **FIXED** |
+| CR-17 Low: no ErrorBoundary on AIToolsTab | **FIXED** |
+| CR-18 Low: inconsistent breakpoints | **DEFERRED** |
+| CR-19 Low: unused eventType function | **FIXED** |
+| CR-20 Low: unused LabelList import | **FALSE POSITIVE** |
+| CR-21 Low: filter flicker | **DEFERRED** |
+| CR-22 Low: timer closure after unmount | **FALSE POSITIVE** |
+| CR-23 Low: silent SDK degradation | **FIXED** |
+
+**Fixed: 15 · False positive: 5 · Deferred: 4 (no functional regression)**

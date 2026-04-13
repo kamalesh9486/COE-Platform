@@ -17,7 +17,10 @@ const TT_STYLE = {
   padding: '8px 14px',
   boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
   fontSize: 12,
+  color: '#fff',
 }
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
 
 // ── Stars renderer ────────────────────────────────────────────
 function Stars({ score, color }: { score: number; color: string }) {
@@ -146,7 +149,7 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={TT_STYLE} />
+              <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
               <Area type="monotone" dataKey="users" stroke={color} strokeWidth={2.5} fill={`url(#grad-${tool.name})`} dot={{ fill: color, r: 3 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
@@ -163,7 +166,7 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
               <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <YAxis type="category" dataKey="dept" tick={{ fontSize: 10, fill: '#374151' }} axisLine={false} tickLine={false} width={110} />
-              <Tooltip contentStyle={TT_STYLE} />
+              <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
               <Bar dataKey="count" fill={color} radius={[0, 5, 5, 0]} />
             </BarChart>
           </ResponsiveContainer>

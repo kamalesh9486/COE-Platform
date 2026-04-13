@@ -38,6 +38,9 @@ export function useCurrentUser(): CurrentUser {
         email = ctx.user.userPrincipalName ?? ''
       } catch {
         // host unreachable (local dev or timeout) — proceed with defaults
+        if (import.meta.env.DEV) {
+          console.warn('[useCurrentUser] Power Apps SDK context unavailable — using fallback identity. This is expected in local development.')
+        }
       }
 
       if (!active) return
@@ -58,8 +61,10 @@ export function useCurrentUser(): CurrentUser {
             // Prefer linked role name, fall back to freetext designation
             role = match.cr978_roleidname ?? match.cr978_coe_designation ?? ''
           }
-        } catch {
-          // non-fatal — role stays empty
+        } catch (err) {
+          // non-fatal — fall back to 'Member' so the sidebar never shows a blank role
+          console.warn('[useCurrentUser] Person lookup timed out or failed:', err instanceof Error ? err.message : String(err))
+          role = 'Member'
         }
       }
 

@@ -47,7 +47,6 @@ const MODULES = [
 ]
 
 function CtxIcon({ type, accent }: { type: string; accent: string }) {
-  const s = { color: accent } as React.CSSProperties
   if (type === 'doc') return (
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
       <rect x="2" y="1" width="12" height="14" rx="2" stroke={accent} strokeWidth="1.2"/>
@@ -80,7 +79,6 @@ function CtxIcon({ type, accent }: { type: string; accent: string }) {
       <path d="M8 8v3M6.5 9.5H9.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   )
-  void s
 }
 
 function LaunchAnim() {

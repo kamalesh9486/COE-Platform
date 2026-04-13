@@ -62,7 +62,11 @@ function getPriority(r: Cr978_powerbidashboards): PriorityKey | null {
 const ALL_STATUSES = Object.keys(STATUS_CFG) as StatusKey[]
 
 // ── Chart tooltips ────────────────────────────────────────────
-const TOOLTIP_STYLE = { background: 'rgba(28,28,30,0.93)', borderRadius: 9, padding: '8px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }
+const TOOLTIP_STYLE = {
+  background: 'rgba(28,28,30,0.93)', borderRadius: 9,
+  padding: '8px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+  color: '#fff',   // fallback so text is always readable on the dark bg
+}
 
 function DonutTip({ active, payload }: { active?: boolean; payload?: { name: string; value: number; payload: { color: string } }[] }) {
   if (!active || !payload?.length) return null
@@ -75,12 +79,18 @@ function DonutTip({ active, payload }: { active?: boolean; payload?: { name: str
   )
 }
 
-function BarTip({ active, payload, label }: { active?: boolean; payload?: { value: number; color: string }[]; label?: string }) {
+function BarTip({ active, payload, label }: {
+  active?: boolean
+  payload?: { value: number; payload: { color: string } }[]
+  label?: string
+}) {
   if (!active || !payload?.length) return null
+  // phase colour lives on the data entry — access via payload.payload
+  const phaseColor = payload[0].payload.color
   return (
     <div style={TOOLTIP_STYLE}>
-      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 13, color: payload[0].color, fontWeight: 800 }}>{payload[0].value} dashboards</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 13, color: phaseColor, fontWeight: 800 }}>{payload[0].value} dashboards</div>
     </div>
   )
 }
@@ -375,9 +385,7 @@ export default function AICommandCenter() {
                       {PRIORITY_CFG[priority].label}
                     </span>
                   )}
-                  {r.cr978_serialnumber && (
-                    <span className="acc-serial">#{r.cr978_serialnumber}</span>
-                  )}
+                  
                 </div>
 
                 {/* Footer */}

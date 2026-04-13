@@ -374,7 +374,10 @@ const TECH_META: Record<string, { color: string; description: string; monthlyCos
 const TOOLTIP_STYLE = {
   background: 'rgba(28,28,30,0.93)', borderRadius: 9,
   padding: '8px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.25)', border: 'none',
+  color: '#fff',
 }
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
 
 // Status color map
 const STATUS_COLOR: Record<UseCaseStatus, string> = {
@@ -783,6 +786,7 @@ function TechTab({ uc }: { uc: UseCase }) {
               tickFormatter={v => `${v.toLocaleString()}`} />
             <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={TOOLTIP_STYLE}
+              labelStyle={TT_LABEL} itemStyle={TT_ITEM}
               formatter={(val) => [`AED ${Number(val).toLocaleString()}`, 'Monthly Cost']} />
             <Bar dataKey="cost" radius={[0, 6, 6, 0]} barSize={20}>
               {barData.map((d, i) => <Cell key={i} fill={d.color} />)}
@@ -860,7 +864,7 @@ function BenefitsTab({ uc }: { uc: UseCase }) {
             <YAxis yAxisId="left"  tick={{ fontSize: 11 }} axisLine={false} tickLine={false} unit="K" />
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} unit="h" />
             <Tooltip contentStyle={TOOLTIP_STYLE}
-              labelStyle={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }}
+              labelStyle={TT_LABEL} itemStyle={TT_ITEM}
               formatter={(val, name) =>
                 name === 'savingsAED'
                   ? [`AED ${Number(val)}K`, 'Cost Savings']

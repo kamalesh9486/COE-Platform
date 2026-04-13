@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
+import { useScrollLock } from '../hooks/useScrollLock'
 import { Cr978_coe_discoveriesService } from '../generated/services/Cr978_coe_discoveriesService'
 import { Cr978_coe_divisionsService }   from '../generated/services/Cr978_coe_divisionsService'
 import { Cr978_coe_departmentsService } from '../generated/services/Cr978_coe_departmentsService'
@@ -10,6 +11,15 @@ import { Cr978_coe_personsService }     from '../generated/services/Cr978_coe_pe
 import type { Cr978_coe_discoveries as Discovery } from '../generated/models/Cr978_coe_discoveriesModel'
 import '../discovery-catalog.css'
 import Icon from '../components/Icon'
+
+// ── Shared tooltip style ──────────────────────────────────────
+const TT_STYLE = {
+  background: 'rgba(28,28,30,0.93)', border: 'none',
+  borderRadius: 9, padding: '8px 14px',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.25)', fontSize: 12, color: '#fff',
+}
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
 
 // ── Lookup map types ──────────────────────────────────────────
 type IdNameMap = Map<string, string>
@@ -81,16 +91,13 @@ function AITypeBadge({ value }: { value?: string }) {
 }
 
 // ── KPI Strip ─────────────────────────────────────────────────
-function KpiStrip({ items, maps }: { items: Discovery[]; maps: LookupMaps }) {
+function KpiStrip({ items }: { items: Discovery[] }) {
   const total          = items.length
   const allocatedCnt   = items.filter(r => !!r._cr978_it_lead_value).length
   const unallocatedCnt = items.filter(r => !r._cr978_it_lead_value).length
   const divCount       = new Set(items.map(r => r._cr978_coe_requestingdivision_value).filter(Boolean)).size
   const deptCount      = new Set(items.map(r => r._cr978_coe_requestingdepartment_value).filter(Boolean)).size
   const leadCount      = new Set(items.map(r => r._cr978_it_lead_value).filter(Boolean)).size
-
-  // suppress unused warning
-  void maps
 
   const kpis = [
     { label: 'Total Discoveries',   value: total,          icon: 'bi-collection',     bg: 'rgba(0,51,102,0.08)',   color: '#003366' },
@@ -242,10 +249,7 @@ function StatusChart({ items }: { items: Discovery[] }) {
           <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={3}>
             {data.map(d => <Cell key={d.name} fill={d.color} />)}
           </Pie>
-          <Tooltip
-            contentStyle={{ background: 'rgba(28,28,30,0.93)', borderRadius: 9, padding: '8px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.25)', border: 'none' }}
-         
-          />
+          <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
         </PieChart>
       </ResponsiveContainer>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', justifyContent: 'center', marginTop: 4 }}>
@@ -262,10 +266,7 @@ function StatusChart({ items }: { items: Discovery[] }) {
 
 // ── Detail Modal ──────────────────────────────────────────────
 function DiscoveryModal({ item: d, maps, onClose }: { item: Discovery; maps: LookupMaps; onClose: () => void }) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+  useScrollLock()
 
   const divName    = resolveDivision(d, maps)
   const deptName   = resolveDepartment(d, maps)
@@ -406,10 +407,10 @@ export default function DiscoveryCatalog() {
   const [sortKey,      setSortKey]      = useState<'cr978_demand_no' | 'cr978_discoveryname' | 'cr978_submitteddate'>('cr978_submitteddate')
   const [sortDir,      setSortDir]      = useState<'asc' | 'desc'>('desc')
 
-  function load() {
+  const fetchData = useCallback(() => {
+    let active = true
     setLoading(true)
     setError('')
-    let active = true
     Promise.all([
       Cr978_coe_discoveriesService.getAll(),
       Cr978_coe_divisionsService.getAll(),
@@ -428,14 +429,15 @@ export default function DiscoveryCatalog() {
       })
       .catch((err: unknown) => {
         if (!active) return
-        console.error('Failed to fetch discovery data', err)
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[DiscoveryCatalog] Failed to fetch data:', msg)
         setError('Failed to load data. Please try again.')
         setLoading(false)
       })
     return () => { active = false }
-  }
+  }, [])
 
-  useEffect(() => { return load() }, [])
+  useEffect(() => fetchData(), [fetchData])
 
   // Unique resolved names for filter dropdowns
   const allStatuses = useMemo(() =>
@@ -511,9 +513,9 @@ export default function DiscoveryCatalog() {
         <p>Live Dataverse data — all discoveries with AI type, SAP type, status, division &amp; department</p>
       </div>
 
-      {loading ? <LoadingState /> : error ? <ErrorState msg={error} onRetry={load} /> : (
+      {loading ? <LoadingState /> : error ? <ErrorState msg={error} onRetry={fetchData} /> : (
         <>
-          <KpiStrip items={items} maps={maps} />
+          <KpiStrip items={items} />
 
           <div className="dc-charts-row">
             <DivisionChart items={items} maps={maps} />

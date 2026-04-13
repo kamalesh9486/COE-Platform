@@ -14,6 +14,7 @@ import StrategicRoadmap  from '../pages/StrategicRoadmap'
 import AICommandCenter   from '../pages/AICommandCenter'
 import AlHasbah         from '../pages/AlHasbah'
 import Icon              from './Icon'
+import { ErrorBoundary } from './ErrorBoundary'
 import dewaLogo          from '../assets/dewa-logo.svg'
 import '../layout.css'
 
@@ -140,8 +141,12 @@ export default function Layout({ onLogout }: LayoutProps) {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="page-content">{renderPage()}</main>
+        {/* Page content — wrapped in ErrorBoundary so a broken page never blanks the whole app */}
+        <main className="page-content">
+          <ErrorBoundary key={activeTab}>
+            {renderPage()}
+          </ErrorBoundary>
+        </main>
       </div>
     </div>
   )

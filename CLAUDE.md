@@ -100,9 +100,30 @@ CSS variables are already set in `src/index.css`: `--sans`, `--heading`, `--mono
 - Always wrap in `<ResponsiveContainer width="100%">`
 - Bar colour: `#007560` (green), secondary: `#ca8a04` (gold), tertiary: `#004937` (teal)
 - Rounded bar tops: `radius={[8, 8, 0, 0]}`
-- Custom tooltip: `background: #1c2a24`, white text
+- Custom tooltip: `background: rgba(28,28,30,0.93)`, white text
 - Grid lines: `rgba(0,117,96,0.07)`
 - Do not introduce Recharts alternatives (Chart.js, D3, Victory, etc.)
+
+### Tooltip text visibility — mandatory rule
+
+All tooltips use a near-black background (`rgba(28,28,30,0.93)`). Recharts does **not** inherit text colour from `contentStyle` — it renders label text in `#666` and item text in the series colour by default. On a dark background those colours are invisible. Every `<Tooltip>` must explicitly set:
+
+```tsx
+// Shared constants (define once per file)
+const TT_STYLE = {
+  background: 'rgba(28,28,30,0.93)', border: 'none',
+  borderRadius: 9, padding: '8px 14px',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+  fontSize: 12, color: '#fff',           // ← base colour safeguard
+}
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
+
+// Usage — always include all three props
+<Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
+```
+
+When using a fully custom `content={<MyTooltip />}` component, set explicit colours inline inside the component instead (the `labelStyle`/`itemStyle` props are ignored in that case). See `AICommandCenter.tsx`, `AIIncident.tsx`, and `Finance.tsx` for the custom-component pattern.
 
 ---
 

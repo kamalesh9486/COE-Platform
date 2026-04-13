@@ -7,6 +7,7 @@ import '../ai-incident.css'
 import { Cr978_coe_aiincidentsService } from '../generated'
 import type { Cr978_coe_aiincidents } from '../generated/models/Cr978_coe_aiincidentsModel'
 import Icon from '../components/Icon'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -121,15 +122,30 @@ const PRIORITY_BORDER: Record<IncidentPriority, string> = {
   Critical: '#dc2626', High: '#ea580c', Medium: '#ca8a04', Low: '#007560',
 }
 
-// Type colors — flexible string key with fallback
-const TYPE_PALETTE = [
+// Type colors — explicit map so each incident type gets a stable, meaningful colour.
+// Unknown types cycle through the fallback palette by their first character code.
+const TYPE_COLOUR_MAP: Record<string, string> = {
+  'Bias / Fairness':       '#ca8a04',
+  'Data Privacy':          '#dc2626',
+  'Cybersecurity':         '#7c3aed',
+  'Reliability':           '#007560',
+  'Vendor Risk':           '#004937',
+  'Model Hallucination':   '#ea580c',
+  'Prompt Injection':      '#b91c1c',
+  'Unauthorised Access':   '#0891b2',
+  'Data Leakage':          '#6d28d9',
+  'Performance Degradation': '#15803d',
+}
+const TYPE_FALLBACK_PALETTE = [
   '#7c3aed', '#dc2626', '#ea580c', '#004937',
   '#b91c1c', '#ca8a04', '#007560', '#0891b2',
   '#6d28d9', '#15803d',
 ]
-function typeColor(type: string, allTypes: string[]): string {
-  const idx = allTypes.indexOf(type)
-  return TYPE_PALETTE[idx % TYPE_PALETTE.length] ?? '#007560'
+function typeColor(type: string): string {
+  if (TYPE_COLOUR_MAP[type]) return TYPE_COLOUR_MAP[type]
+  // Deterministic fallback based on string hash so the same type always gets the same colour
+  const hash = type.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  return TYPE_FALLBACK_PALETTE[hash % TYPE_FALLBACK_PALETTE.length]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -173,15 +189,12 @@ function PieTip({ active, payload }: { active?: boolean; payload?: { name: strin
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 
-function IncidentModal({ inc, onClose, allTypes }: { inc: AIIncidentRecord; onClose: () => void; allTypes: string[] }) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
+function IncidentModal({ inc, onClose }: { inc: AIIncidentRecord; onClose: () => void }) {
+  useScrollLock()
   const sC   = STATUS_C[inc.status]
   const pC   = PRIORITY_C[inc.priority]
   const sevC = SEVERITY_C[inc.severity]
-  const tColor = typeColor(inc.type, allTypes)
+  const tColor = typeColor(inc.type)
 
   const timelineSteps: { label: string; date: string | undefined; color: string; alwaysShow: boolean }[] = [
     { label: 'Incident Reported',  date: inc.reportedOn ?? inc.createdOn,  color: '#007560', alwaysShow: true  },
@@ -374,7 +387,7 @@ export default function AIIncident() {
         if (result.data) setIncidents(result.data.map(mapRecord))
       })
       .catch((err: unknown) => {
-        console.error('Failed to load AI incidents', err)
+        console.error('[AIIncident] Failed to load incidents:', err instanceof Error ? err.message : String(err))
         setError('Failed to load incidents from Dataverse.')
       })
       .finally(() => setLoading(false))
@@ -395,7 +408,7 @@ export default function AIIncident() {
 
   // Chart data — by type
   const typeChartData = useMemo(() =>
-    allTypes.map(t => ({ name: t, count: incidents.filter(i => i.type === t).length, color: typeColor(t, allTypes) }))
+    allTypes.map(t => ({ name: t, count: incidents.filter(i => i.type === t).length, color: typeColor(t) }))
       .sort((a, b) => b.count - a.count),
     [incidents, allTypes]
   )
@@ -598,7 +611,7 @@ export default function AIIncident() {
                 const sC   = STATUS_C[inc.status]
                 const pC   = PRIORITY_C[inc.priority]
                 const sevC = SEVERITY_C[inc.severity]
-                const tColor = typeColor(inc.type, allTypes)
+                const tColor = typeColor(inc.type)
                 return (
                   <tr
                     key={inc.id}
@@ -678,7 +691,7 @@ export default function AIIncident() {
             const sC   = STATUS_C[inc.status]
             const pC   = PRIORITY_C[inc.priority]
             const sevC = SEVERITY_C[inc.severity]
-            const tColor = typeColor(inc.type, allTypes)
+            const tColor = typeColor(inc.type)
             return (
               <div
                 key={inc.id}
@@ -727,7 +740,7 @@ export default function AIIncident() {
         </div>
       )}
 
-      {selected && <IncidentModal inc={selected} onClose={() => setSelected(null)} allTypes={allTypes} />}
+      {selected && <IncidentModal inc={selected} onClose={() => setSelected(null)} />}
     </div>
   )
 }

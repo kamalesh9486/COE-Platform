@@ -1,4 +1,5 @@
 import AIToolsTab from './ps/AIToolsTab'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import '../people-skills.css'
 
 export default function TechnologyStack() {
@@ -8,7 +9,9 @@ export default function TechnologyStack() {
         <h1 style={{ padding: '5px' }}>Technology Stack</h1>
         <p>AI tools deployed across divisions — usage, adoption and departmental coverage</p>
       </div>
-      <AIToolsTab />
+      <ErrorBoundary>
+        <AIToolsTab />
+      </ErrorBoundary>
     </div>
   )
 }
