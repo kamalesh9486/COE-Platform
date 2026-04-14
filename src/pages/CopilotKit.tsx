@@ -141,6 +141,9 @@ function PieCard({ title, subtitle, yes, no, colorYes, labelYes, labelNo }: {
   )
 }
 
+// ── Derivation note ────────────────────────────────────────────
+
+
 // ── Helper ─────────────────────────────────────────────────────
 function count<T>(arr: T[], key: (item: T) => string) {
   const map: Record<string, number> = {}
@@ -159,8 +162,8 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
   const authCounts = useMemo(() => {
     let microsoft = 0, manual = 0, none = 0
     agents.forEach(a => {
-      const t = (a.cat_enduserauthenticationtype ?? '').toLowerCase()
-      if (t.includes('microsoft') || t.includes('azure') || t.includes('aad')) microsoft++
+      const t = (a.cat_enduserauthenticationtype ?? '').trim().toLowerCase()
+      if (t === 'integrated') microsoft++
       else if (!t || t === 'none') none++
       else manual++
     })
@@ -317,6 +320,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
               <CompactStatCard label="Microsoft / Azure AD" value={authCounts.microsoft} iconName="bi-microsoft"   color={B}       bg={`${B}0f`}   />
               <CompactStatCard label="Manual / Custom Auth"  value={authCounts.manual}   iconName="bi-key-fill"    color={AMB}     bg={`${AMB}12`} />
               <CompactStatCard label="No Authentication"     value={authCounts.none}     iconName="bi-unlock-fill" color="#6b7280" bg="#f3f4f6"    />
+            
             </div>
           </div>
 
@@ -331,7 +335,7 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
           {timelineData.length > 0 && (
             <div style={{ background: '#fff', borderRadius: 16, padding: '20px 24px', border: `1px solid ${G}18`, boxShadow: `0 2px 12px ${G}0a` }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#1c1c1e' }}>Agent Growth Timeline</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>
                 Monthly new agents&nbsp;
                 <span style={{ color: G, fontWeight: 700 }}>■</span>&nbsp;
                 Cumulative total&nbsp;
@@ -370,6 +374,8 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                 </div>
                 <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
               </div>
+
+             
 
               {/* ── 6 KPI tiles ── */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -415,7 +421,9 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                 {/* Classification coverage */}
                 <div style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', border: `1px solid ${B}18`, boxShadow: `0 2px 12px ${B}0a` }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#1c1c1e' }}>Classification Coverage</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>Agents matched from agentdetails to agentvalues</div>
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>
+                    Agents matched from Agent Details to Agent Values — {classifiedCount} of {allAgentsCount} agents have a value record
+                  </div>
                   <ResponsiveContainer width="100%" height={150}>
                     <PieChart>
                       <Pie
@@ -445,7 +453,9 @@ export default function CopilotKitPanel({ onBack }: { onBack: () => void }) {
                 {/* Value saturation pie */}
                 <div style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', border: `1px solid ${G}18`, boxShadow: `0 2px 12px ${G}0a` }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#1c1c1e' }}>Value Benefit Saturation</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>Agents with vs without a benefit assigned</div>
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>
+                    {withBenefitCount} of {gloTotalAgents} value records have a non-empty benefit label — derived from the <em>Agent Value Benefit</em> field
+                  </div>
                   <ResponsiveContainer width="100%" height={150}>
                     <PieChart>
                       <Pie
