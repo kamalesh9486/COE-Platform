@@ -14,6 +14,7 @@ export * as Cr978_coe_eventsesModel from './models/Cr978_coe_eventsesModel';
 export * as Cr978_coe_personsModel from './models/Cr978_coe_personsModel';
 export * as Cr978_coe_programsModel from './models/Cr978_coe_programsModel';
 export * as Cr978_powerbidashboardsModel from './models/Cr978_powerbidashboardsModel';
+export * as MicrosoftCopilotStudioModel from './models/MicrosoftCopilotStudioModel';
 
 // Services
 export * from './services/Cr978_coe_aiincidentsService';
@@ -25,3 +26,4 @@ export * from './services/Cr978_coe_eventsesService';
 export * from './services/Cr978_coe_personsService';
 export * from './services/Cr978_coe_programsService';
 export * from './services/Cr978_powerbidashboardsService';
+export * from './services/MicrosoftCopilotStudioService';

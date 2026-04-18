@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import '../command-iq.css'
 import Icon from './Icon'
 import { useScrollLock } from '../hooks/useScrollLock'
+import { MicrosoftCopilotStudioService } from '../generated/services/MicrosoftCopilotStudioService'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -16,17 +17,9 @@ interface Message {
   done: boolean
 }
 
-// ─── API ─────────────────────────────────────────────────────────────────────
+// ─── Agent config ─────────────────────────────────────────────────────────────
 
-const AGENT_ENDPOINT = import.meta.env.VITE_AGENT_ENDPOINT as string | undefined
-if (!AGENT_ENDPOINT && import.meta.env.DEV) {
-  console.warn('[CommandIQ] VITE_AGENT_ENDPOINT is not set — chat will not work. Add it to .env.local')
-}
-
-interface AgentResponse {
-  response: string
-  conversationid: string
-}
+const AGENT_NAME = 'cr978_sharePointQueryAssistant'
 
 // ─── Quick prompts ────────────────────────────────────────────────────────────
 
@@ -133,22 +126,23 @@ export default function CommandIQ() {
     setThinking(true)
 
     try {
-      if (!AGENT_ENDPOINT) throw new Error('VITE_AGENT_ENDPOINT not configured')
-      const res = await fetch(AGENT_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          Prompt: text.trim(),
-          ConverId: conversationIdRef.current,
-        }),
-      })
+      const result = await MicrosoftCopilotStudioService.ExecuteCopilotAsyncV2(
+        AGENT_NAME,
+        { message: text.trim(), notificationUrl: 'https://notificationurlplaceholder' },
+        conversationIdRef.current !== 'New' ? conversationIdRef.current : undefined
+      )
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = result.data as Record<string, unknown> | null | undefined
 
-      const data: AgentResponse = await res.json()
+      // Persist conversation ID for multi-turn context
+      const convId = (data?.conversationId ?? data?.ConversationId ?? data?.conversationID) as string | undefined
+      if (convId) conversationIdRef.current = convId
 
-      // Persist conversation ID for all subsequent turns
-      conversationIdRef.current = data.conversationid
+      const responseText = (
+        (data?.lastResponse as string | undefined) ??
+        ((data?.responses as string[] | undefined)?.[0]) ??
+        'Sorry, I received an empty response.'
+      )
 
       const aiId = `ai-${Date.now()}`
       const aiMsg: Message = {
@@ -161,7 +155,7 @@ export default function CommandIQ() {
       setThinking(false)
       setMessages(prev => [...prev, aiMsg])
       if (!open) setUnread(n => n + 1)
-      streamMessage(aiId, data.response)
+      streamMessage(aiId, responseText)
 
     } catch {
       const aiId = `ai-err-${Date.now()}`
