@@ -69,7 +69,10 @@ export default function CommandIQ() {
   const bottomRef               = useRef<HTMLDivElement>(null)
   const inputRef                = useRef<HTMLInputElement>(null)
   const streamRef               = useRef<ReturnType<typeof setInterval> | null>(null)
-  const conversationIdRef       = useRef<string>('New')
+  // A fresh UUID on every mount guarantees a new Copilot Studio conversation on each page load.
+  // Passing an unrecognised ID forces the backend to create a fresh session rather than
+  // resuming the user's last server-side conversation when no ID is provided.
+  const conversationIdRef       = useRef<string>(crypto.randomUUID())
 
   // Clear stream interval on unmount to prevent memory leak
   useEffect(() => {
@@ -129,7 +132,7 @@ export default function CommandIQ() {
       const result = await MicrosoftCopilotStudioService.ExecuteCopilotAsyncV2(
         AGENT_NAME,
         { message: text.trim(), notificationUrl: 'https://notificationurlplaceholder' },
-        conversationIdRef.current !== 'New' ? conversationIdRef.current : undefined
+        conversationIdRef.current
       )
 
       const data = result.data as Record<string, unknown> | null | undefined
@@ -255,7 +258,7 @@ export default function CommandIQ() {
                 className="ciq-icon-btn"
                 title="New conversation"
                 aria-label="Start new conversation"
-                onClick={() => { setMessages([]); conversationIdRef.current = 'New' }}
+                onClick={() => { setMessages([]); conversationIdRef.current = crypto.randomUUID() }}
               >
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
