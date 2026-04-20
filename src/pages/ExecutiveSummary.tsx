@@ -1,552 +1,588 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, ComposedChart, Line,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
+import Icon from '../components/Icon'
+import { useCurrentUser } from '../hooks/useCurrentUser'
+import { Cr978_coe_divisionsService } from '../generated/services/Cr978_coe_divisionsService'
+import type { Cr978_coe_divisions } from '../generated/models/Cr978_coe_divisionsModel'
 import '../executive-summary.css'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-type DateRange = 'month' | 'quarter' | 'year'
+type ProgStatus = 'live' | 'pilot' | 'dev' | 'risk'
+type ActiveKpi  = 'trained' | 'projects' | 'impact' | 'adoption' | 'issues' | null
 
-// ─── Static Data ──────────────────────────────────────────────────────────────
-const PROGRAM_DATA: Record<DateRange, { category: string; count: number; color: string }[]> = {
-  month: [
-    { category: 'Events',       count: 4,  color: '#007560' },
-    { category: 'Trainings',    count: 9,  color: '#ca8a04' },
-    { category: 'Technologies', count: 3,  color: '#004937' },
-    { category: 'Initiatives',  count: 2,  color: '#007560' },
-  ],
-  quarter: [
-    { category: 'Events',       count: 11, color: '#007560' },
-    { category: 'Trainings',    count: 28, color: '#ca8a04' },
-    { category: 'Technologies', count: 9,  color: '#004937' },
-    { category: 'Initiatives',  count: 6,  color: '#007560' },
-  ],
-  year: [
-    { category: 'Events',       count: 38, color: '#007560' },
-    { category: 'Trainings',    count: 94, color: '#ca8a04' },
-    { category: 'Technologies', count: 22, color: '#004937' },
-    { category: 'Initiatives',  count: 18, color: '#007560' },
-  ],
+// ─── Static chart data ────────────────────────────────────────────────────────
+const TECH_DATA = [
+  { month: 'May', genai: 5,  cv: 3,  pred: 7,  iot: 2,  auto: 1  },
+  { month: 'Jun', genai: 7,  cv: 5,  pred: 9,  iot: 3,  auto: 1  },
+  { month: 'Jul', genai: 10, cv: 8,  pred: 12, iot: 5,  auto: 2  },
+  { month: 'Aug', genai: 14, cv: 11, pred: 15, iot: 7,  auto: 3  },
+  { month: 'Sep', genai: 19, cv: 15, pred: 18, iot: 10, auto: 5  },
+  { month: 'Oct', genai: 25, cv: 19, pred: 21, iot: 13, auto: 7  },
+  { month: 'Nov', genai: 32, cv: 23, pred: 24, iot: 15, auto: 9  },
+  { month: 'Dec', genai: 38, cv: 27, pred: 27, iot: 17, auto: 10 },
+  { month: 'Jan', genai: 46, cv: 30, pred: 29, iot: 19, auto: 11 },
+  { month: 'Feb', genai: 51, cv: 32, pred: 29, iot: 20, auto: 12 },
+  { month: 'Mar', genai: 56, cv: 33, pred: 29, iot: 21, auto: 13 },
+  { month: 'Apr', genai: 58, cv: 34, pred: 29, iot: 22, auto: 14 },
+]
+
+const TECH_LINES = [
+  { key: 'genai' as const, label: 'Generative AI',   color: '#17944a', count: 58, delta: '+34', dash: ''    },
+  { key: 'cv'    as const, label: 'Computer Vision',  color: '#2b63c8', count: 34, delta: '+11', dash: ''    },
+  { key: 'pred'  as const, label: 'Predictive / ML',  color: '#1a9a94', count: 29, delta: '+7',  dash: ''    },
+  { key: 'iot'   as const, label: 'IoT · Edge AI',    color: '#d98c0a', count: 22, delta: '+9',  dash: '5 3' },
+  { key: 'auto'  as const, label: 'Autonomous',       color: '#6a3fb3', count: 14, delta: '+5',  dash: '5 3' },
+]
+
+const PROGRAMMES: { name: string; dept: string; div: string; pct: number; impact: string; color: string; status: ProgStatus }[] = [
+  { name: 'Grid Demand Copilot',          dept: 'Power Generation · LLM',    div: 'Power Generation',   pct: 86, impact: '18.2M', color: '#17944a', status: 'live'  },
+  { name: 'Smart Meter Anomaly AI',       dept: 'Customer Service · Pred.',   div: 'Customer Service',   pct: 72, impact: '11.6M', color: '#2b63c8', status: 'live'  },
+  { name: 'Desalination Efficiency Twin', dept: 'Water Ops · Digital twin',   div: 'Water Operations',   pct: 58, impact: '9.8M',  color: '#1a9a94', status: 'pilot' },
+  { name: 'Solar Yield Forecaster',       dept: 'MBR Solar Park · Forecast',  div: 'Renewables',         pct: 64, impact: '7.4M',  color: '#d98c0a', status: 'live'  },
+  { name: 'Customer Care Voice AI',       dept: 'Customer · GenAI · AR/EN',   div: 'Customer Service',   pct: 44, impact: '5.1M',  color: '#6a3fb3', status: 'dev'   },
+  { name: 'Asset Integrity Vision',       dept: 'Transmission · CV inspect.', div: 'Transmission',       pct: 39, impact: 'flagged',color:'#c8352c', status: 'risk'  },
+]
+
+const PILLARS = [
+  { num: '01', title: 'AI-first operations',       pct: 78, target: 66, note: 'on track',  gradient: 'linear-gradient(90deg,#54c47a,#17944a)' },
+  { num: '02', title: 'Workforce transformation',  pct: 71, target: 68, note: 'on track',  gradient: 'linear-gradient(90deg,#54c47a,#17944a)' },
+  { num: '03', title: 'Generative AI enablement',  pct: 84, target: 70, note: 'ahead',     gradient: 'linear-gradient(90deg,#3d7ae0,#1c4aa8)' },
+  { num: '04', title: 'Trusted AI governance',     pct: 54, target: 62, note: 'attention', gradient: 'linear-gradient(90deg,#d98c0a,#b77007)' },
+  { num: '05', title: 'Ecosystem & partnerships',  pct: 62, target: 60, note: 'on track',  gradient: 'linear-gradient(90deg,#31b6b0,#0e6f6a)' },
+]
+
+
+const HEAT_MONTHS = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun']
+
+const HEAT_VALS: number[][] = [
+  [3.2,4.1,5.4,6.8,7.9,8.6,9.2,9.8,10.4,11.2,11.8,12.0],
+  [2.1,2.6,3.2,3.8,4.4,4.9,5.2,5.8,6.4,6.9,7.3,7.6],
+  [1.8,2.2,2.8,3.2,3.9,4.6,5.1,5.4,5.8,6.2,6.6,6.8],
+  [2.6,3.0,3.4,3.9,4.8,5.6,6.4,7.1,7.8,8.4,8.9,9.3],
+  [1.1,1.4,1.9,2.4,2.8,3.4,3.9,4.5,5.1,5.6,6.0,6.4],
+  [0.6,0.8,1.0,1.2,1.5,1.7,1.9,2.1,2.4,2.6,2.8,3.0],
+  [0.9,1.2,1.5,1.8,2.1,2.4,2.6,2.9,3.2,3.5,3.8,4.1],
+]
+
+const FALLBACK_DIV_NAMES = [
+  'Power Generation','Transmission','Water Operations',
+  'Customer Service','Renewables · Solar','Corporate Services','Innovation · R&D',
+]
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function greeting(name: string) {
+  const h = new Date().getHours()
+  const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
+  return `Good ${part}, ${name || 'welcome'}.`
 }
 
-const ROI_TREND = [
-  { month: 'Oct', savings: 480,  hours: 3200 },
-  { month: 'Nov', savings: 620,  hours: 3900 },
-  { month: 'Dec', savings: 710,  hours: 4400 },
-  { month: 'Jan', savings: 890,  hours: 5100 },
-  { month: 'Feb', savings: 1050, hours: 6200 },
-  { month: 'Mar', savings: 1240, hours: 7400 },
-]
-
-const RISK_CATEGORIES = [
-  { label: 'Data Privacy & Compliance', count: 2, level: 'high',   color: '#dc2626' },
-  { label: 'Model Bias & Fairness',     count: 3, level: 'medium', color: '#ca8a04' },
-  { label: 'Operational Reliability',   count: 1, level: 'medium', color: '#ca8a04' },
-  { label: 'Cybersecurity Exposure',    count: 1, level: 'low',    color: '#007560' },
-  { label: 'Vendor & Third-Party',      count: 2, level: 'low',    color: '#007560' },
-]
-
-const SKILL_DOMAINS = [
-  { domain: 'AI / ML Fundamentals',   pct: 78, trained: 922 },
-  { domain: 'Prompt Engineering',     pct: 61, trained: 720 },
-  { domain: 'Data Literacy',          pct: 84, trained: 992 },
-  { domain: 'AI Ethics & Governance', pct: 55, trained: 649 },
-  { domain: 'MLOps & Deployment',     pct: 38, trained: 449 },
-  { domain: 'NLP & Computer Vision',  pct: 29, trained: 342 },
-]
-
-// Neural network background — stable random positions generated once
-const NEURAL_NODES = [
-  { id: 0,  x: 8,  y: 20, dur: 2.8, delay: 0.0 },
-  { id: 1,  x: 18, y: 65, dur: 3.2, delay: 0.6 },
-  { id: 2,  x: 28, y: 12, dur: 2.5, delay: 1.1 },
-  { id: 3,  x: 35, y: 80, dur: 3.7, delay: 0.3 },
-  { id: 4,  x: 44, y: 40, dur: 2.9, delay: 1.8 },
-  { id: 5,  x: 52, y: 15, dur: 3.4, delay: 0.9 },
-  { id: 6,  x: 58, y: 72, dur: 2.6, delay: 1.5 },
-  { id: 7,  x: 66, y: 30, dur: 3.1, delay: 0.2 },
-  { id: 8,  x: 73, y: 85, dur: 2.7, delay: 1.3 },
-  { id: 9,  x: 80, y: 50, dur: 3.5, delay: 0.7 },
-  { id: 10, x: 88, y: 18, dur: 2.4, delay: 2.1 },
-  { id: 11, x: 93, y: 70, dur: 3.0, delay: 1.0 },
-  { id: 12, x: 22, y: 45, dur: 3.3, delay: 0.4 },
-  { id: 13, x: 62, y: 55, dur: 2.8, delay: 1.6 },
-  { id: 14, x: 48, y: 88, dur: 3.6, delay: 0.8 },
-  { id: 15, x: 76, y: 8,  dur: 2.5, delay: 2.3 },
-]
-
-const NEURAL_EDGES = [
-  [0, 2], [0, 4], [1, 3], [1, 12], [2, 5], [2, 7],
-  [3, 6], [4, 5], [4, 12], [5, 7], [6, 8], [7, 9],
-  [8, 11], [9, 10], [9, 13], [10, 15], [11, 13], [12, 14],
-  [13, 14], [14, 8], [6, 13], [15, 10],
-]
-
-// ─── Hooks ────────────────────────────────────────────────────────────────────
-function useInView(threshold = 0.2) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setInView(true) },
-      { threshold }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [threshold])
-  return { ref, inView }
-}
-
-function useCounter(target: number, duration: number, go: boolean): number {
-  const [val, setVal] = useState(0)
-  const raf = useRef(0)
-  useEffect(() => {
-    if (!go) return
-    const t0 = performance.now()
-    const tick = (now: number) => {
-      const p = Math.min((now - t0) / duration, 1)
-      setVal(Math.round((1 - Math.pow(1 - p, 3)) * target))
-      if (p < 1) raf.current = requestAnimationFrame(tick)
+function heatColor(v: number, max: number): string {
+  if (v === 0) return '#f4f6f9'
+  const t = Math.min(1, v / max)
+  const stops: [number, [number, number, number]][] = [
+    [0.00, [236, 247, 240]],
+    [0.40, [185, 230, 200]],
+    [0.75, [42,  169, 90 ]],
+    [1.00, [10,  125, 62 ]],
+  ]
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [a, ca] = stops[i]
+    const [b, cb] = stops[i + 1]
+    if (t >= a && t <= b) {
+      const k  = (t - a) / (b - a)
+      const r  = Math.round(ca[0] + (cb[0] - ca[0]) * k)
+      const g  = Math.round(ca[1] + (cb[1] - ca[1]) * k)
+      const bl = Math.round(ca[2] + (cb[2] - ca[2]) * k)
+      return `rgb(${r},${g},${bl})`
     }
-    raf.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf.current)
-  }, [target, duration, go])
-  return val
+  }
+  return 'rgb(10,125,62)'
 }
 
-// ─── Neural Network Hero ──────────────────────────────────────────────────────
-function NeuralHero() {
-  return (
-    <div className="es2-hero">
-      <svg className="es2-hero-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-        {NEURAL_EDGES.map(([ai, bi], idx) => {
-          const a = NEURAL_NODES[ai]
-          const b = NEURAL_NODES[bi]
-          return (
-            <line
-              key={idx}
-              x1={`${a.x}%`} y1={`${a.y}%`}
-              x2={`${b.x}%`} y2={`${b.y}%`}
-              stroke="rgba(0,255,160,0.18)"
-              strokeWidth="0.35"
-            >
-              <animate
-                attributeName="opacity"
-                values="0.08;0.55;0.08"
-                dur={`${3.5 + (idx % 5) * 0.6}s`}
-                repeatCount="indefinite"
-                begin={`${(idx % 4) * 0.7}s`}
-              />
-            </line>
-          )
-        })}
-        {NEURAL_NODES.map(n => (
-          <circle key={n.id} cx={`${n.x}%`} cy={`${n.y}%`} r="0.65" fill="rgba(0,255,160,0.7)">
-            <animate attributeName="r"       values="0.4;1.0;0.4" dur={`${n.dur}s`} repeatCount="indefinite" begin={`${n.delay}s`} />
-            <animate attributeName="opacity" values="0.25;1;0.25"  dur={`${n.dur}s`} repeatCount="indefinite" begin={`${n.delay}s`} />
-          </circle>
-        ))}
-      </svg>
-      <div className="es2-hero-content">
-        <div className="es2-hero-live">
-          <span className="es2-hero-live-dot" />
-          Live · Q1 2026
-        </div>
-        <h1 className="es2-hero-title">AI Intelligence Command Center</h1>
-        <p className="es2-hero-sub">DEWA Centre of Excellence · Updated 20 Mar 2026</p>
-      </div>
-    </div>
-  )
+function adoptionBadge(rate: number): { label: string; cls: string } {
+  if (rate >= 70) return { label: 'Leading',     cls: 'es-badge--high' }
+  if (rate >= 40) return { label: 'Progressing', cls: 'es-badge--med'  }
+  return               { label: 'Lagging',      cls: 'es-badge--low'  }
 }
 
-// ─── Animated Circular Ring ───────────────────────────────────────────────────
-function AnimatedRing({ pct, size = 82, color = '#ca8a04', go }: { pct: number; size?: number; color?: string; go: boolean }) {
-  const count = useCounter(pct, 1400, go)
-  const r = (size - 14) / 2
-  const circ = 2 * Math.PI * r
-  const offset = circ - (count / 100) * circ
-  return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={9} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r}
-        fill="none" stroke={color} strokeWidth={9}
-        strokeDasharray={circ}
-        strokeDashoffset={go ? offset : circ}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(0.34,1.56,0.64,1)' }}
-      />
-      <text
-        x={size / 2} y={size / 2}
-        textAnchor="middle" dominantBaseline="middle"
-        fill="#1c1c1e" fontSize={size * 0.2} fontWeight={800}
-        style={{ transform: `rotate(90deg)`, transformOrigin: `${size / 2}px ${size / 2}px` }}
-      >
-        {count}%
-      </text>
-    </svg>
-  )
-}
+// ─── Tooltip constants ────────────────────────────────────────────────────────
+const TT       = { background: 'rgba(20,26,43,0.95)', border: 'none', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#fff' }
+const TT_LABEL = { color: 'rgba(255,255,255,0.6)', fontSize: 11, marginBottom: 4 }
+const TT_ITEM  = { color: '#fff', fontWeight: 600 }
 
-// ─── Animated Bar ─────────────────────────────────────────────────────────────
-function AnimBar({ pct, color, inView }: { pct: number; color: string; inView: boolean }) {
-  return (
-    <div className="es2-bar-track">
-      <div
-        className="es2-bar-fill"
-        style={{ width: inView ? `${pct}%` : '0%', background: color }}
-      />
-    </div>
-  )
-}
-
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-interface KpiProps {
-  icon: ReactNode
-  label: string
-  target: number
-  displayValue?: string
-  sub: string
-  accent?: boolean
-  showRing?: boolean
-}
-
-function KpiCard({ icon, label, target, displayValue, sub, accent, showRing }: KpiProps) {
-  const { ref, inView } = useInView()
-  const count = useCounter(target, 1400, inView)
-  const display = displayValue ?? count.toLocaleString()
-
-  return (
-    <div
-      ref={ref}
-      className={`es2-kpi-card${accent ? ' es2-kpi-card--accent' : ''}`}
-    >
-      <div className="es2-kpi-icon">{icon}</div>
-      {showRing ? (
-        <div className="es2-kpi-ring"><AnimatedRing pct={target} go={inView} /></div>
-      ) : (
-        <div className="es2-kpi-value">{display}</div>
-      )}
-      <div className="es2-kpi-label">{label}</div>
-      <div className="es2-kpi-sub">{sub}</div>
-    </div>
-  )
-}
-
-// ─── Section Header ───────────────────────────────────────────────────────────
-function SectionHeader({ icon, title, sub }: { icon: ReactNode; title: string; sub: string }) {
-  const { ref, inView } = useInView(0.1)
-  return (
-    <div ref={ref} className={`es2-sh${inView ? ' es2-sh--in' : ''}`}>
-      <h2 className="es2-sh-title">
-        <span className="es2-sh-icon">{icon}</span>
-        {title}
-        <span className={`es2-sh-line${inView ? ' es2-sh-line--in' : ''}`} />
-      </h2>
-      <span className="es2-sh-sub">{sub}</span>
-    </div>
-  )
-}
-
-// ─── Tooltip components ───────────────────────────────────────────────────────
-function BarTip({ active, payload, label }: { active?: boolean; payload?: { value: number; fill: string }[]; label?: string }) {
+function TechTip({ active, payload, label }: {
+  active?: boolean
+  payload?: { name: string; value: number; color: string }[]
+  label?: string
+}) {
   if (!active || !payload?.length) return null
   return (
-    <div className="es2-tooltip">
-      <div className="es2-tooltip-label">{label}</div>
-      <div className="es2-tooltip-value" style={{ color: payload[0].fill }}>■ {payload[0].value} programs</div>
-    </div>
-  )
-}
-
-function RoiTip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="es2-tooltip">
-      <div className="es2-tooltip-label">{label}</div>
+    <div className="es-tooltip">
+      <div className="es-tooltip-label">{label}</div>
       {payload.map(p => (
-        <div key={p.name} className="es2-tooltip-value" style={{ color: p.color, marginTop: 2 }}>
-          ■ {p.name === 'savings' ? `AED ${p.value}K saved` : `${p.value.toLocaleString()} hrs`}
-        </div>
+        <div key={p.name} className="es-tooltip-val" style={{ color: p.color }}>{p.name}: {p.value}</div>
       ))}
     </div>
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function ExecutiveSummary() {
-  const [dateRange, setDateRange] = useState<DateRange>('quarter')
-  const programData   = PROGRAM_DATA[dateRange]
-  const totalPrograms = programData.reduce((s, d) => s + d.count, 0)
+  const [activeKpi,  setActiveKpi]  = useState<ActiveKpi>(null)
+  const [divisions,  setDivisions]  = useState<Cr978_coe_divisions[]>([])
+  const [divLoading,   setDivLoading]   = useState(true)
+  const { name } = useCurrentUser()
 
-  const { ref: wfRef,    inView: wfInView    } = useInView()
-  const { ref: skillRef, inView: skillInView } = useInView()
+  // Section refs for scroll-to on KPI click
+  const refTech     = useRef<HTMLDivElement>(null)
+  const refAdoption = useRef<HTMLDivElement>(null)
+  const refHeat     = useRef<HTMLDivElement>(null)
+  const refProg     = useRef<HTMLDivElement>(null)
+  const refPulse    = useRef<HTMLDivElement>(null)
 
-  const iconKpi = (path: string) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-      <path d={path} />
-    </svg>
+  useEffect(() => {
+    let active = true
+    Cr978_coe_divisionsService.getAll({ filter: 'statecode eq 0' })
+      .then(res => {
+        if (!active) return
+        setDivisions(res.data ?? [])
+        setDivLoading(false)
+      })
+      .catch(() => { if (active) setDivLoading(false) })
+    return () => { active = false }
+  }, [])
+
+  // ── Derived values ──────────────────────────────────────────────────────────
+  const avgAdoptionRate = useMemo(() => {
+    const withRate = divisions.filter(d => d.cr435_adoptionrate != null)
+    if (withRate.length === 0) return 71
+    return Math.round(withRate.reduce((s, d) => s + (d.cr435_adoptionrate ?? 0), 0) / withRate.length)
+  }, [divisions])
+
+  const heatRows = useMemo(() =>
+    HEAT_VALS.slice(0, 7).map((row, i) => ({
+      label: divisions[i]?.cr978_divisionname ?? FALLBACK_DIV_NAMES[i] ?? `Division ${i + 1}`,
+      row,
+    })),
+    [divisions]
   )
 
+  const sortedDivisions = useMemo(
+    () => [...divisions].sort((a, b) => (b.cr435_adoptionrate ?? 0) - (a.cr435_adoptionrate ?? 0)),
+    [divisions]
+  )
+
+  const adoptionBuckets = useMemo(() => {
+    if (divisions.length === 0) {
+      return [
+        { name: 'Leading (≥70%)',      value: 3, color: '#17944a' },
+        { name: 'Progressing (40–69%)', value: 2, color: '#d98c0a' },
+        { name: 'Lagging (<40%)',       value: 2, color: '#c8352c' },
+      ]
+    }
+    const high = divisions.filter(d => (d.cr435_adoptionrate ?? 0) >= 70).length
+    const med  = divisions.filter(d => { const r = d.cr435_adoptionrate ?? 0; return r >= 40 && r < 70 }).length
+    const low  = divisions.filter(d => (d.cr435_adoptionrate ?? 0) < 40).length
+    return [
+      { name: 'Leading (≥70%)',       value: high || 1, color: '#17944a' },
+      { name: 'Progressing (40–69%)', value: med  || 1, color: '#d98c0a' },
+      { name: 'Lagging (<40%)',        value: low  || 1, color: '#c8352c' },
+    ]
+  }, [divisions])
+
+  // ── KPI click handler ───────────────────────────────────────────────────────
+  function handleKpiClick(kpi: ActiveKpi, ref: React.RefObject<HTMLDivElement | null>) {
+    setActiveKpi(prev => prev === kpi ? null : kpi)
+    setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50)
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="es2-root">
-
-      {/* ── HERO ─────────────────────────────────────────────────── */}
-      <NeuralHero />
-
-      {/* ── SECTION 1: KPIs ──────────────────────────────────────── */}
-      <div className="es2-section" style={{ animationDelay: '0.05s' }}>
-        <SectionHeader
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ca8a04" viewBox="0 0 16 16">
-              <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4M3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707M2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10m9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5m.754-4.246a.39.39 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.39.39 0 0 0-.029-.518z"/>
-              <path fillRule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A8 8 0 0 1 0 10m8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3"/>
-            </svg>
-          }
-          title="Key Performance Indicators"
-          sub="Q1 2026 · Updated 20 Mar 2026"
-        />
-        <div className="es2-kpi-grid">
-          <KpiCard
-            accent showRing
-            icon={iconKpi('M0 0h1v15h15v1H0zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5')}
-            label="AI Adoption Rate"
-            target={64}
-            sub="Across all divisions"
-          />
-          <KpiCard
-            icon={iconKpi('M6.5 6a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zM5.5.5a.5.5 0 0 0-1 0V2A2.5 2.5 0 0 0 2 4.5H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2v1H.5a.5.5 0 0 0 0 1H2A2.5 2.5 0 0 0 4.5 14v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14h1v1.5a.5.5 0 0 0 1 0V14a2.5 2.5 0 0 0 2.5-2.5h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14v-1h1.5a.5.5 0 0 0 0-1H14A2.5 2.5 0 0 0 11.5 2V.5a.5.5 0 0 0-1 0V2h-1V.5a.5.5 0 0 0-1 0V2h-1V.5a.5.5 0 0 0-1 0V2h-1zm1 4.5h3A1.5 1.5 0 0 1 11 6.5v3A1.5 1.5 0 0 1 9.5 11h-3A1.5 1.5 0 0 1 5 9.5v-3A1.5 1.5 0 0 1 6.5 5')}
-            label="Total AI Initiatives"
-            target={47}
-            sub="+6 from last quarter ↑"
-          />
-          <KpiCard
-            icon={iconKpi('M2.5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm5 2h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1m-5 1a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zm9-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1')}
-            label="Active AI Projects"
-            target={31}
-            sub="7 new this quarter"
-          />
-          <KpiCard
-            icon={iconKpi('M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466z')}
-            label="People Trained in AI"
-            target={1182}
-            sub="Target: 1,500 by Q2"
-          />
+    <div>
+      {/* Page header */}
+      <div className="es-page-head">
+        <div className="es-page-head-text">
+          <div className="es-page-eyebrow">Centre of Excellence · Artificial Intelligence</div>
+          <h1>{greeting(name)} Here&apos;s where DEWA&apos;s AI transformation stands today.</h1>
+          <p className="es-page-sub">Tracking 47 live programmes · 18,400 trained · AED 84.2M impact · FY26 Q2 · Apr 01–20, 2026</p>
         </div>
       </div>
 
-      {/* ── SECTION 2: Impact Analysis ────────────────────────────── */}
-      <div className="es2-section" style={{ animationDelay: '0.12s' }}>
-        <SectionHeader
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ca8a04" viewBox="0 0 16 16">
-              <path d="M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1z"/>
-            </svg>
-          }
-          title="Impact Analysis"
-          sub="Business value delivered · Oct 2025 – Mar 2026"
-        />
+      <div className="es-page">
 
-        <div className="es2-impact-grid">
-          {[
-            { c: 'green',  icon: '', value: 'AED 4.2M', label: 'Cost Savings Realized',      sub: '+38% vs same period last year', delay: 0    },
-            { c: 'blue',   icon: '', value: '28,400',   label: 'Process Hours Automated',     sub: 'Equivalent to 14.2 FTEs',        delay: 0.08 },
-            { c: 'amber',  icon: '', value: '+34%',     label: 'Operational Efficiency Gain', sub: 'Across automated workflows',     delay: 0.16 },
-            { c: 'purple', icon: '',  value: '−62%',     label: 'Error Rate Reduction',        sub: 'In AI-assisted processes',       delay: 0.24 },
-          ].map(card => (
+        {/* ── KPI Strip ── */}
+        <div className="es-kpi-strip">
+            {/* Employees trained */}
             <div
-              key={card.c}
-              className={`es2-impact-card es2-impact-card--${card.c}`}
-              style={{ animationDelay: `${card.delay}s` }}
+              className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'trained' ? ' es-kpi-cell--active' : ''}`}
+              onClick={() => handleKpiClick('trained', refTech)}
             >
-              <div className="es2-impact-icon">{card.icon}</div>
-              <div className="es2-impact-value">{card.value}</div>
-              <div className="es2-impact-label">{card.label}</div>
-              <div className="es2-impact-sub">{card.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* ROI Trend Chart */}
-        <div className="es2-chart-card">
-          <div className="es2-chart-header">
-            <span className="es2-chart-title">Monthly ROI Trend — Cost Savings &amp; Hours Automated</span>
-            <span className="es2-chart-badge">6-month · Oct–Mar 2026</span>
-          </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <ComposedChart data={ROI_TREND} margin={{ top: 8, right: 52, left: -8, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="left"  tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}K`} />
-              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#ca8a04' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(1)}k`} />
-              <Tooltip content={<RoiTip />} />
-              <Bar yAxisId="left" dataKey="savings" name="savings" fill="#007560" radius={[6, 6, 0, 0]} barSize={30} opacity={0.9} />
-              <Line yAxisId="right" type="monotone" dataKey="hours" name="hours" stroke="#ca8a04" strokeWidth={2.5} dot={{ r: 4, fill: '#ca8a04', stroke: '#17271f', strokeWidth: 2 }} activeDot={{ r: 6 }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-          <div className="es2-chart-legend">
-            <span className="es2-legend-item"><span style={{ background: '#007560' }} />Cost Savings (AED K) — bars</span>
-            <span className="es2-legend-item"><span style={{ background: '#ca8a04' }} />Process Hours Saved — line</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── SECTION 3: Risk & Governance ─────────────────────────── */}
-      <div className="es2-section" style={{ animationDelay: '0.18s' }}>
-        <SectionHeader
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ca8a04" viewBox="0 0 16 16">
-              <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.118a1 1 0 0 0 .201 0q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524z"/>
-              <path d="M7.001 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.553.553 0 0 1-1.1 0z"/>
-            </svg>
-          }
-          title="AI Risk & Governance"
-          sub="Governance health · Q1 2026"
-        />
-        <div className="es2-risk-row">
-          <div className="es2-risk-stats">
-            {[
-              { val: '9',   label: 'Open Risk Items',       sub: '2 high · 4 med · 3 low',    cls: 'red',   delay: 0    },
-              { val: '94%', label: 'AI Compliance Score',   sub: 'Policies & regulations',     cls: 'green', delay: 0.07 },
-              { val: '3',   label: 'Active AI Incidents',   sub: '12 resolved this quarter',   cls: 'amber', delay: 0.14 },
-              { val: '88%', label: 'Model Audit Coverage',  sub: '22 of 25 models audited',    cls: 'blue',  delay: 0.21 },
-            ].map(s => (
-              <div key={s.label} className={`es2-risk-stat es2-risk-stat--${s.cls}`} style={{ animationDelay: `${s.delay}s` }}>
-                <div className="es2-risk-stat-val">{s.val}</div>
-                <div className="es2-risk-stat-label">{s.label}</div>
-                <div className="es2-risk-stat-sub">{s.sub}</div>
+              <div className="es-kpi-eyebrow">Employees trained</div>
+              <div className="es-kpi-row">
+                <div className="es-kpi-value">18,401<span className="es-kpi-unit"> / 22k</span></div>
+                <span className="es-delta es-delta--up">+12.4%</span>
               </div>
-            ))}
+              <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
+                <defs><linearGradient id="sg1" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#2aa95a" stopOpacity="0.3"/><stop offset="100%" stopColor="#2aa95a" stopOpacity="0"/></linearGradient></defs>
+                <path d="M0,34 L20,30 40,28 60,24 80,22 100,18 120,14 140,11 160,8 180,5 200,3 L200,40 L0,40 Z" fill="url(#sg1)"/>
+                <path d="M0,34 L20,30 40,28 60,24 80,22 100,18 120,14 140,11 160,8 180,5 200,3" fill="none" stroke="#17944a" strokeWidth="1.8"/>
+              </svg>
+              <div className="es-kpi-hint">View tech growth <Icon name="bi-arrow-right" /></div>
+            </div>
+
+            {/* Live AI projects */}
+            <div
+              className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'projects' ? ' es-kpi-cell--active' : ''}`}
+              onClick={() => handleKpiClick('projects', refProg)}
+            >
+              <div className="es-kpi-eyebrow">Live AI projects</div>
+              <div className="es-kpi-row">
+                <div className="es-kpi-value">47<span className="es-kpi-unit"> active</span></div>
+                <span className="es-delta es-delta--up">+9</span>
+              </div>
+              <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
+                <g fill="#2b63c8">
+                  {[5,25,45,65,85,105,125,145,165,185].map((x, i) => (
+                    <rect key={i} x={x} y={40 - (16 + i * 2)} width="10" height={16 + i * 2} rx="1"/>
+                  ))}
+                </g>
+              </svg>
+              <div className="es-kpi-hint">View programmes <Icon name="bi-arrow-right" /></div>
+            </div>
+
+            {/* Impact realised */}
+            <div
+              className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'impact' ? ' es-kpi-cell--active' : ''}`}
+              onClick={() => handleKpiClick('impact', refHeat)}
+            >
+              <div className="es-kpi-eyebrow">Impact realised (AED)</div>
+              <div className="es-kpi-row">
+                <div className="es-kpi-value">84.2<span className="es-kpi-unit">M</span></div>
+                <span className="es-delta es-delta--up">+21.3%</span>
+              </div>
+              <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
+                <path d="M0,36 L20,34 40,30 60,32 80,26 100,24 120,18 140,20 160,12 180,10 200,6" fill="none" stroke="#1a9a94" strokeWidth="1.8"/>
+                {[40,100,160].map((cx,i) => <circle key={i} cx={cx} cy={[30,24,12][i]} r="1.5" fill="#1a9a94"/>)}
+                <circle cx="200" cy="6" r="2.2" fill="#1a9a94"/>
+              </svg>
+              <div className="es-kpi-hint">View heatmap <Icon name="bi-arrow-right" /></div>
+            </div>
+
+            {/* Overall Adoption Rate — from Dataverse */}
+            <div
+              className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'adoption' ? ' es-kpi-cell--active' : ''}`}
+              onClick={() => handleKpiClick('adoption', refAdoption)}
+            >
+              <div className="es-kpi-eyebrow">Overall adoption rate</div>
+              <div className="es-kpi-row">
+                <div className="es-kpi-value">
+                  {divLoading ? <span className="es-kpi-loading" /> : avgAdoptionRate}
+                  <span className="es-kpi-unit">%</span>
+                </div>
+                <span className="es-delta es-delta--up">+6.2 pt</span>
+              </div>
+              <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
+                <circle cx="100" cy="20" r="16" fill="none" stroke="#eef0f6" strokeWidth="5"/>
+                <circle cx="100" cy="20" r="16" fill="none" stroke="#17944a" strokeWidth="5"
+                  strokeDasharray={`${avgAdoptionRate} 100`} pathLength="100"
+                  strokeLinecap="round" transform="rotate(-90 100 20)"/>
+              </svg>
+              <div className="es-kpi-hint">View by division <Icon name="bi-arrow-right" /></div>
+            </div>
+
+            {/* Open issues */}
+            <div
+              className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'issues' ? ' es-kpi-cell--active' : ''}`}
+              onClick={() => handleKpiClick('issues', refPulse)}
+            >
+              <div className="es-kpi-eyebrow">Open risks · high / med</div>
+              <div className="es-kpi-row">
+                <div className="es-kpi-value">3<span className="es-kpi-unit" style={{ color: '#c8352c' }}> · 9</span></div>
+                <span className="es-delta es-delta--down">-2</span>
+              </div>
+              <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
+                {[0,60,120].map((ox, i) => (
+                  <g key={i} transform={`translate(${ox},0)`}>
+                    <rect x="0"  y={10 - i} width="14" height={24 + i} fill="#c8352c" rx="1"/>
+                    <rect x="18" y={14 - i} width="14" height={20 + i} fill="#d98c0a" rx="1"/>
+                    <rect x="36" y={22 - i} width="14" height={12 + i} fill="#17944a" rx="1"/>
+                  </g>
+                ))}
+              </svg>
+              <div className="es-kpi-hint">View AI pulse <Icon name="bi-arrow-right" /></div>
+            </div>
           </div>
-          <div className="es2-risk-breakdown">
-            <div className="es2-risk-bd-title">Risk by Category</div>
-            {RISK_CATEGORIES.map(r => (
-              <div key={r.label} className="es2-risk-item">
-                <span className="es2-risk-item-label">{r.label}</span>
-                <div className="es2-risk-item-right">
-                  <span
-                    className="es2-risk-badge"
-                    style={{ background: `${r.color}18`, color: r.color, border: `1px solid ${r.color}33` }}
-                  >{r.level}</span>
-                  <span className="es2-risk-count">{r.count}</span>
+
+        {/* ── 12-col grid ── */}
+        <div className="es-grid">
+
+          {/* Technologies Growth — span 8 */}
+          <div ref={refTech} className={`es-card es-span-8${activeKpi === 'trained' ? ' es-card--active' : ''}`}>
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">Technologies growth</div>
+                <h3 className="es-card-title">AI technology adoption across DEWA</h3>
+                <div className="es-card-sub">Active deployments by technology category · last 12 months</div>
+              </div>
+              <div className="es-card-actions">
+                <button className="es-mini-tab">6M</button>
+                <button className="es-mini-tab active">12M</button>
+                <button className="es-mini-tab">24M</button>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={TECH_DATA} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9aa3bb' }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 65]} tick={{ fontSize: 11, fill: '#9aa3bb' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<TechTip />} />
+                {TECH_LINES.map(t => (
+                  <Line key={t.key} type="monotone" dataKey={t.key} name={t.label}
+                    stroke={t.color} strokeWidth={2.2}
+                    strokeDasharray={t.dash || undefined}
+                    dot={false} activeDot={{ r: 4, fill: t.color }} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="es-hr" />
+            <div className="es-tech-legend">
+              {TECH_LINES.map(t => (
+                <div key={t.key} className="es-tech-legend-item">
+                  <div className="es-tech-legend-dot">
+                    <span className="es-tech-sw" style={{ background: t.color }} />
+                    <span className="es-tech-name">{t.label}</span>
+                  </div>
+                  <div className="es-tech-count">{t.count}</div>
+                  <div className="es-tech-delta">{t.delta} models</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Overall Adoption Rate — span 4 */}
+          <div ref={refAdoption} className={`es-card es-span-4${activeKpi === 'adoption' ? ' es-card--active' : ''}`}>
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">AI Adoption by Division</div>
+                <h3 className="es-card-title">Overall adoption rate</h3>
+                <div className="es-card-sub">
+                  {divLoading ? 'Loading divisions…' : `${divisions.length} divisions · Dataverse live`}
+                </div>
+              </div>
+            </div>
+
+            {/* Donut */}
+            <div className="es-donut-wrap">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={adoptionBuckets} cx="50%" cy="50%" innerRadius={58} outerRadius={85}
+                    dataKey="value" startAngle={90} endAngle={-270} paddingAngle={2}>
+                    {adoptionBuckets.map((b, i) => <Cell key={i} fill={b.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="es-donut-center">
+                <div className="es-donut-pct">
+                  {divLoading ? '—' : avgAdoptionRate}%
+                </div>
+                <div className="es-donut-label">avg adoption</div>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="es-legend">
+              {adoptionBuckets.map(b => (
+                <div key={b.name} className="es-legend-row">
+                  <span className="es-legend-sw" style={{ background: b.color }} />
+                  <span className="es-legend-label">{b.name}</span>
+                  <span className="es-legend-val">{b.value} div.</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="es-hr" />
+            <div className="es-wf-footer">
+              <div className="es-wf-col">
+                <span className="es-wf-col-label">FY26 target</span>
+                <span className="es-wf-col-val">80%</span>
+              </div>
+              <div className="es-wf-col" style={{ textAlign: 'center' }}>
+                <span className="es-wf-col-label">Gap</span>
+                <span className="es-wf-col-val" style={{ color: avgAdoptionRate >= 80 ? '#17944a' : '#d98c0a' }}>
+                  {avgAdoptionRate >= 80 ? 'Achieved' : `${80 - avgAdoptionRate} pt`}
+                </span>
+              </div>
+              <div className="es-wf-col" style={{ textAlign: 'right' }}>
+                <span className="es-wf-col-label">Leading div.</span>
+                <span className="es-wf-col-val">
+                  {divLoading || divisions.length === 0
+                    ? 'Power Gen.'
+                    : (sortedDivisions[0]?.cr978_divisionname?.split(' ')[0] ?? '—')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Impact Heatmap — span 8 */}
+          <div ref={refHeat} className={`es-card es-span-8${activeKpi === 'impact' ? ' es-card--active' : ''}`}>
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">Impact analysis · division × month</div>
+                <h3 className="es-card-title">AI programme value delivered (AED M)</h3>
+                <div className="es-card-sub">All divisions · last 12 months · realised + committed</div>
+              </div>
+              <div className="es-card-actions">
+                <button className="es-mini-tab active">Financial</button>
+                <button className="es-mini-tab">Operational</button>
+              </div>
+            </div>
+            <div className="es-heat-scroll">
+              <div className="es-heat-grid">
+                <div />
+                {HEAT_MONTHS.map(m => <div key={m} className="es-heat-col-label">{m}</div>)}
+              </div>
+              {heatRows.map(div => (
+                <div key={div.label} className="es-heat-grid" style={{ marginTop: 3 }}>
+                  <div className="es-heat-label" title={div.label}>{div.label}</div>
+                  {div.row.map((v, i) => (
+                    <div key={i} className="es-heat-cell"
+                      style={{ background: heatColor(v, 12) }}
+                      title={`${div.label} · ${HEAT_MONTHS[i]} · AED ${v.toFixed(1)}M`} />
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="es-heat-footer">
+              <div className="es-heat-scale">
+                <span>0 AED</span>
+                <span className="es-heat-scale-bar" />
+                <span>12 AED M</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#5a6682' }}>
+                Top this quarter: <strong style={{ color: '#141a2b' }}>
+                  {heatRows[0]?.label ?? 'Power Generation'} · AED {
+                    heatRows[0] ? Math.max(...heatRows[0].row.slice(9)).toFixed(1) : '29.4'
+                  }M
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Programmes — span 4 */}
+          <div ref={refProg} className={`es-card es-span-4${activeKpi === 'projects' ? ' es-card--active' : ''}`}>
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">Top programmes</div>
+                <h3 className="es-card-title">Flagship initiatives</h3>
+                <div className="es-card-sub">{PROGRAMMES.length} programmes · ranked by impact</div>
+              </div>
+            </div>
+            <div className="es-prog-head">
+              <span>Programme</span><span>Progress</span><span style={{ textAlign: 'right' }}>Status</span>
+            </div>
+            {PROGRAMMES.map(p => (
+              <div key={p.name} className="es-prog-row">
+                <div>
+                  <div className="es-prog-name">{p.name}</div>
+                  <div className="es-prog-dept">{p.dept}</div>
+                </div>
+                <div>
+                  <div className="es-prog-bar-track">
+                    <div className="es-prog-bar-fill" style={{ width: `${p.pct}%`, background: p.color }} />
+                  </div>
+                  <div className="es-prog-meta">{p.pct}% · AED {p.impact}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span className={`es-status es-status--${p.status}`}>
+                    {{ live: 'Live', pilot: 'Pilot', dev: 'Dev', risk: 'At risk' }[p.status]}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* ── SECTION 4: Workforce Readiness ────────────────────────── */}
-      <div className="es2-section" style={{ animationDelay: '0.24s' }}>
-        <SectionHeader
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ca8a04" viewBox="0 0 16 16">
-              <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/>
-            </svg>
-          }
-          title="AI Workforce Readiness"
-          sub="Training & skill progress · Target Q2 2026"
-        />
-        <div className="es2-wf-row">
-          <div ref={wfRef} className="es2-wf-metrics">
-            {[
-              { val: '1,182', label: 'Employees Trained',          sub: 'of 1,500 target',    pct: 78.8, color: '#007560' },
-              { val: '89',    label: 'Certified AI Practitioners',  sub: '+23 this quarter',   pct: 59,   color: '#0891b2' },
-              { val: '6',     label: 'Active Learning Paths',       sub: '420 in progress',    pct: 100,  color: '#ca8a04' },
-              { val: '4.1/5', label: 'Avg Assessment Score',        sub: 'Across all modules', pct: 82,   color: '#7c3aed' },
-            ].map(m => (
-              <div key={m.label} className="es2-wf-card">
-                <div className="es2-wf-val" style={{ color: m.color }}>{m.val}</div>
-                <div className="es2-wf-label">{m.label}</div>
-                <div className="es2-wf-sub">{m.sub}</div>
-                <AnimBar pct={m.pct} color={m.color} inView={wfInView} />
-                <div className="es2-wf-pct">{m.pct}%</div>
+          {/* Strategic Roadmap — span 8 */}
+          <div className="es-card es-span-8">
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">Strategic Roadmap · FY25–FY27</div>
+                <h3 className="es-card-title">Progress across the five strategic pillars</h3>
+                <div className="es-card-sub">Milestones by pillar · weight-adjusted completion</div>
               </div>
-            ))}
+              <div className="es-card-actions">
+                <button className="es-mini-tab active">Pillars</button>
+              </div>
+            </div>
+            <div className="es-roadmap">
+              {PILLARS.map(p => (
+                <div key={p.num} className="es-rm-pillar">
+                  <div className="es-rm-pillar-head">
+                    <div className="es-rm-name">
+                      <span className="es-rm-num">{p.num}</span>
+                      <span className="es-rm-title">{p.title}</span>
+                    </div>
+                    <div className="es-rm-progress"><b>{p.pct}%</b> · {p.note}</div>
+                  </div>
+                  <div className="es-rm-bar-track">
+                    <div className="es-rm-bar-fill" style={{ width: `${p.pct}%`, background: p.gradient }} />
+                    <div className="es-rm-target" style={{ left: `${p.target}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div ref={skillRef} className="es2-skill-panel">
-            <div className="es2-skill-title">Skill Domain Completion</div>
-            {SKILL_DOMAINS.map(s => {
-              const color = s.pct >= 70 ? '#007560' : s.pct >= 50 ? '#ca8a04' : '#dc2626'
+          {/* AI Pulse — span 4 */}
+          <div ref={refPulse} className={`es-card es-span-4${activeKpi === 'issues' ? ' es-card--active' : ''}`}>
+            <div className="es-card-head">
+              <div className="es-card-title-group">
+                <div className="es-card-eyebrow">AI Pulse · division health</div>
+                <h3 className="es-card-title">Adoption by division</h3>
+                <div className="es-card-sub">
+                  {divLoading ? 'Loading…' : `${sortedDivisions.length} divisions · sorted by adoption rate`}
+                </div>
+              </div>
+              <div className="es-card-actions">
+                <Icon name="bi-bar-chart-horizontal-fill" />
+              </div>
+            </div>
+
+            {divLoading ? (
+              <div className="es-pulse-skeleton">
+                {[1,2,3,4,5].map(i => <div key={i} className="es-skeleton-row" />)}
+              </div>
+            ) : sortedDivisions.slice(0, 7).map(div => {
+              const rate    = div.cr435_adoptionrate ?? 0
+              const projs   = div.cr435_numberofaiprojects ?? 0
+              const akdar   = div.cr435_akdarscore != null ? Math.round(div.cr435_akdarscore) : null
+              const { label: badgeLabel, cls: badgeCls } = adoptionBadge(rate)
               return (
-                <div key={s.domain} className="es2-skill-item">
-                  <div className="es2-skill-row">
-                    <span className="es2-skill-name">{s.domain}</span>
-                    <span className="es2-skill-stat" style={{ color }}>{s.pct}%</span>
+                <div key={div.cr978_coe_divisionid} className="es-pulse-row">
+                  <div className="es-pulse-info">
+                    <span className="es-pulse-name">{div.cr978_divisionname}</span>
+                    <div className="es-pulse-meta">
+                      <span>{projs} AI proj.</span>
+                      {akdar != null && <span>ADKAR {akdar}%</span>}
+                    </div>
                   </div>
-                  <AnimBar pct={s.pct} color={color} inView={skillInView} />
+                  <div className="es-pulse-bar-wrap">
+                    <div className="es-pulse-bar" style={{ width: `${rate}%`, background: rate >= 70 ? '#17944a' : rate >= 40 ? '#d98c0a' : '#c8352c' }} />
+                  </div>
+                  <div className="es-pulse-right">
+                    <span className="es-pulse-pct">{rate}%</span>
+                    <span className={`es-badge ${badgeCls}`}>{badgeLabel}</span>
+                  </div>
                 </div>
               )
             })}
+
           </div>
+
         </div>
       </div>
-
-      {/* ── SECTION 5: Programs Overview ──────────────────────────── */}
-      <div className="es2-section" style={{ animationDelay: '0.30s' }}>
-        <div className="es2-sh es2-sh--in">
-          <h2 className="es2-sh-title">
-            <span className="es2-sh-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ca8a04" viewBox="0 0 16 16">
-                <path d="M4 11H2v3h2zm5-4H7v7h2zm5-5v12h-2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM6 7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-5 4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
-              </svg>
-            </span>
-            AI Programs Overview
-          </h2>
-          <div className="es2-tab-filter">
-            {(['month', 'quarter', 'year'] as DateRange[]).map(r => (
-              <button
-                key={r}
-                className={`es2-tab${dateRange === r ? ' es2-tab--active' : ''}`}
-                onClick={() => setDateRange(r)}
-              >
-                {r === 'month' ? 'This Month' : r === 'quarter' ? 'This Quarter' : 'This Year'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="es2-programs-grid">
-          <div className="es2-chart-card">
-            <div className="es2-chart-header">
-              <span className="es2-chart-title">Programs by Category</span>
-              <span className="es2-chart-badge">{totalPrograms} total</span>
-            </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={programData} margin={{ top: 8, right: 16, left: -8, bottom: 0 }} barSize={46}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="category" tick={{ fontSize: 13, fill: '#6b7280', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip content={<BarTip />} cursor={{ fill: 'rgba(0,117,96,0.06)' }} />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {programData.map(e => <Cell key={e.category} fill={e.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="es2-program-tiles">
-            {programData.map((p, i) => (
-              <div
-                key={p.category}
-                className="es2-program-tile"
-                style={{ animationDelay: `${i * 0.08}s` }}
-              >
-                <div className="es2-program-tile-dot" style={{ background: p.color }} />
-                <div className="es2-program-tile-body">
-                  <div className="es2-program-tile-val" style={{ color: p.color }}>{p.count}</div>
-                  <div className="es2-program-tile-label">{p.category}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
     </div>
   )
 }
