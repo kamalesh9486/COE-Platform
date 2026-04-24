@@ -1,0 +1,1 @@
+- [React QR Portal Stack](react-qr-stack.md) — React 19 + TS, localStorage + optional Supabase, DEWA design tokens, no charting lib

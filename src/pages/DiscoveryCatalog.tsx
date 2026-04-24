@@ -149,9 +149,9 @@ function ChartTooltip({ active, payload, label }: {
 
 // ── Colour palettes ───────────────────────────────────────────
 const DEPT_PALETTE = [
-  '#6366f1', '#0891b2', '#10b981', '#f59e0b', '#ef4444',
-  '#8b5cf6', '#ec4899', '#84cc16', '#f97316', '#14b8a6',
-  '#3b82f6', '#a855f7',
+  '#007560', '#ca8a04', '#004937', '#0891b2', '#6366f1',
+  '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#84cc16',
+  '#f97316', '#a855f7',
 ]
 
 // ── Chart 1: Division + Department combined stacked bar ───────
@@ -220,9 +220,9 @@ function DivisionChart({ items, maps }: { items: Discovery[]; maps: LookupMaps }
 
 // ── Chart 2: Status Distribution (Donut) ─────────────────────
 const CHART_PALETTE = [
-  '#6366f1', '#0891b2', '#10b981', '#f59e0b', '#ef4444',
-  '#8b5cf6', '#ec4899', '#84cc16', '#f97316', '#14b8a6',
-  '#3b82f6', '#a855f7', '#ca8a04', '#007560', '#dc2626',
+  '#007560', '#ca8a04', '#004937', '#0891b2', '#6366f1',
+  '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#84cc16',
+  '#f97316', '#a855f7', '#dc2626',
 ]
 
 function StatusChart({ items }: { items: Discovery[] }) {
@@ -250,6 +250,7 @@ function StatusChart({ items }: { items: Discovery[] }) {
             {data.map(d => <Cell key={d.name} fill={d.color} />)}
           </Pie>
           <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
+          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
         </PieChart>
       </ResponsiveContainer>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', justifyContent: 'center', marginTop: 4 }}>

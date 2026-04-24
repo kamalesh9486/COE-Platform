@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell, PieChart, Pie,
 } from 'recharts'
 import '../ai-incident.css'
@@ -494,7 +494,8 @@ export default function AIIncident() {
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11, fill: '#374151' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<BarTip />} cursor={{ fill: 'rgba(0,117,96,0.04)' }} />
-                <Bar dataKey="count" radius={[0, 5, 5, 0]}
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+                <Bar dataKey="count" name="Incidents" radius={[0, 5, 5, 0]}
                   label={{ position: 'right', fontSize: 11, fontWeight: 700, fill: '#374151' }}>
                   {typeChartData.map(d => (
                     <Cell key={d.name} fill={d.color} />

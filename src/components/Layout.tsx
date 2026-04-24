@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Sidebar, { type TabId, PAGE_TITLES } from './Sidebar'
+import Sidebar, { type TabId } from './Sidebar'
 import ExecutiveSummary from '../pages/ExecutiveSummary'
 import PeopleSkills from '../pages/PeopleSkills'
 import Programs from '../pages/Programs'
@@ -134,7 +134,7 @@ export default function Layout({ onLogout }: LayoutProps) {
             >
               <Icon name={mobileOpen ? 'bi-x-lg' : 'bi-list'} aria-hidden="true" />
             </button>
-            <span className="topbar-page-title">{PAGE_TITLES[activeTab]}</span>
+            <span className="topbar-page-title">Center of Excellence</span>
           </div>
           <div className="topbar-right">
             <img src={dewaLogo} alt="DEWA" className="topbar-logo" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
 import { Cr978_powerbidashboardsService } from '../generated'
@@ -259,7 +259,8 @@ export default function AICommandCenter() {
                   <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#374151', fontWeight: 600 }} width={88} axisLine={false} tickLine={false} />
                   <Tooltip content={<BarTip />} cursor={{ fill: 'rgba(0,117,96,0.05)' }} />
-                  <Bar dataKey="value" radius={[0, 6, 6, 0]} maxBarSize={22}>
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+                  <Bar dataKey="value" name="Dashboards" radius={[0, 6, 6, 0]} maxBarSize={22}>
                     {(Object.keys(PHASE_CFG) as PhaseKey[])
                       .filter(p => (phaseCounts[p] ?? 0) > 0)
                       .map(p => <Cell key={p} fill={PHASE_CFG[p].color} />)}

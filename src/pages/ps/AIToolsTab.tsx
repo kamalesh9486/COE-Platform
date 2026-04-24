@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from 'recharts'
 import { AI_TOOLS, type AITool } from './data'
@@ -150,7 +150,8 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
-              <Area type="monotone" dataKey="users" stroke={color} strokeWidth={2.5} fill={`url(#grad-${tool.name})`} dot={{ fill: color, r: 3 }} activeDot={{ r: 5 }} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+              <Area type="monotone" dataKey="users" name="Users" stroke={color} strokeWidth={2.5} fill={`url(#grad-${tool.name})`} dot={{ fill: color, r: 3 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -167,7 +168,8 @@ function ToolDetailView({ tool, onBack }: { tool: AITool; onBack: () => void }) 
               <XAxis type="number" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <YAxis type="category" dataKey="dept" tick={{ fontSize: 10, fill: '#374151' }} axisLine={false} tickLine={false} width={110} />
               <Tooltip contentStyle={TT_STYLE} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
-              <Bar dataKey="count" fill={color} radius={[0, 5, 5, 0]} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+              <Bar dataKey="count" name="Users" fill={color} radius={[0, 5, 5, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

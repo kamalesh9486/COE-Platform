@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
 import Icon from '../components/Icon'
@@ -29,11 +29,11 @@ const TECH_DATA = [
 ]
 
 const TECH_LINES = [
-  { key: 'genai' as const, label: 'Generative AI',   color: '#17944a', count: 58, delta: '+34', dash: ''    },
-  { key: 'cv'    as const, label: 'Computer Vision',  color: '#2b63c8', count: 34, delta: '+11', dash: ''    },
-  { key: 'pred'  as const, label: 'Predictive / ML',  color: '#1a9a94', count: 29, delta: '+7',  dash: ''    },
-  { key: 'iot'   as const, label: 'IoT · Edge AI',    color: '#d98c0a', count: 22, delta: '+9',  dash: '5 3' },
-  { key: 'auto'  as const, label: 'Autonomous',       color: '#6a3fb3', count: 14, delta: '+5',  dash: '5 3' },
+  { key: 'genai' as const, label: 'Generative AI',   color: '#007560', count: 58, delta: '+34', dash: ''    },
+  { key: 'cv'    as const, label: 'Computer Vision',  color: '#ca8a04', count: 34, delta: '+11', dash: ''    },
+  { key: 'pred'  as const, label: 'Predictive / ML',  color: '#004937', count: 29, delta: '+7',  dash: ''    },
+  { key: 'iot'   as const, label: 'IoT · Edge AI',    color: '#0891b2', count: 22, delta: '+9',  dash: '5 3' },
+  { key: 'auto'  as const, label: 'Autonomous',       color: '#6366f1', count: 14, delta: '+5',  dash: '5 3' },
 ]
 
 const PROGRAMMES: { name: string; dept: string; div: string; pct: number; impact: string; color: string; status: ProgStatus }[] = [
@@ -177,8 +177,8 @@ export default function ExecutiveSummary() {
   const adoptionBuckets = useMemo(() => {
     if (divisions.length === 0) {
       return [
-        { name: 'Leading (≥70%)',      value: 3, color: '#17944a' },
-        { name: 'Progressing (40–69%)', value: 2, color: '#d98c0a' },
+        { name: 'Leading (≥70%)',      value: 3, color: '#007560' },
+        { name: 'Progressing (40–69%)', value: 2, color: '#ca8a04' },
         { name: 'Lagging (<40%)',       value: 2, color: '#c8352c' },
       ]
     }
@@ -186,8 +186,8 @@ export default function ExecutiveSummary() {
     const med  = divisions.filter(d => { const r = d.cr435_adoptionrate ?? 0; return r >= 40 && r < 70 }).length
     const low  = divisions.filter(d => (d.cr435_adoptionrate ?? 0) < 40).length
     return [
-      { name: 'Leading (≥70%)',       value: high || 1, color: '#17944a' },
-      { name: 'Progressing (40–69%)', value: med  || 1, color: '#d98c0a' },
+      { name: 'Leading (≥70%)',       value: high || 1, color: '#007560' },
+      { name: 'Progressing (40–69%)', value: med  || 1, color: '#ca8a04' },
       { name: 'Lagging (<40%)',        value: low  || 1, color: '#c8352c' },
     ]
   }, [divisions])
@@ -292,24 +292,21 @@ export default function ExecutiveSummary() {
               <div className="es-kpi-hint">View by division <Icon name="bi-arrow-right" /></div>
             </div>
 
-            {/* Open issues */}
+            {/* AI Readiness Score */}
             <div
               className={`es-kpi-cell es-kpi-cell--clickable${activeKpi === 'issues' ? ' es-kpi-cell--active' : ''}`}
               onClick={() => handleKpiClick('issues', refPulse)}
             >
-              <div className="es-kpi-eyebrow">Open risks · high / med</div>
+              <div className="es-kpi-eyebrow">AI Readiness Score</div>
               <div className="es-kpi-row">
-                <div className="es-kpi-value">3<span className="es-kpi-unit" style={{ color: '#c8352c' }}> · 9</span></div>
-                <span className="es-delta es-delta--down">-2</span>
+                <div className="es-kpi-value">78<span className="es-kpi-unit"> / 100</span></div>
+                <span className="es-delta es-delta--up">+4</span>
               </div>
               <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
-                {[0,60,120].map((ox, i) => (
-                  <g key={i} transform={`translate(${ox},0)`}>
-                    <rect x="0"  y={10 - i} width="14" height={24 + i} fill="#c8352c" rx="1"/>
-                    <rect x="18" y={14 - i} width="14" height={20 + i} fill="#d98c0a" rx="1"/>
-                    <rect x="36" y={22 - i} width="14" height={12 + i} fill="#17944a" rx="1"/>
-                  </g>
-                ))}
+                <rect x="0" y="30" width="200" height="4" rx="2" fill="#eef0f6"/>
+                <rect x="0" y="30" width="156" height="4" rx="2" fill="#007560"/>
+                <circle cx="156" cy="32" r="5" fill="#007560"/>
+                <text x="160" y="18" fontSize="11" fill="#007560" fontWeight="700">78%</text>
               </svg>
               <div className="es-kpi-hint">View AI pulse <Icon name="bi-arrow-right" /></div>
             </div>
@@ -338,6 +335,7 @@ export default function ExecutiveSummary() {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9aa3bb' }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 65]} tick={{ fontSize: 11, fill: '#9aa3bb' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<TechTip />} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
                 {TECH_LINES.map(t => (
                   <Line key={t.key} type="monotone" dataKey={t.key} name={t.label}
                     stroke={t.color} strokeWidth={2.2}

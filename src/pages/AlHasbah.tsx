@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell, ComposedChart, Line,
 } from 'recharts'
 import Icon from '../components/Icon'
@@ -788,7 +788,8 @@ function TechTab({ uc }: { uc: UseCase }) {
             <Tooltip contentStyle={TOOLTIP_STYLE}
               labelStyle={TT_LABEL} itemStyle={TT_ITEM}
               formatter={(val) => [`AED ${Number(val).toLocaleString()}`, 'Monthly Cost']} />
-            <Bar dataKey="cost" radius={[0, 6, 6, 0]} barSize={20}>
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+            <Bar dataKey="cost" name="Monthly Cost (AED)" radius={[0, 6, 6, 0]} barSize={20}>
               {barData.map((d, i) => <Cell key={i} fill={d.color} />)}
             </Bar>
           </BarChart>
@@ -871,8 +872,9 @@ function BenefitsTab({ uc }: { uc: UseCase }) {
                   : [`${Number(val).toLocaleString()} hrs`, 'Hours Automated']
               }
             />
-            <Bar yAxisId="left" dataKey="savingsAED" fill="var(--dewa-green)" radius={[6,6,0,0]} barSize={26} opacity={0.85} />
-            <Line yAxisId="right" type="monotone" dataKey="hoursAutomated" stroke="#ca8a04" strokeWidth={2.5} dot={{ r: 4, fill: '#ca8a04' }} />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+            <Bar yAxisId="left" dataKey="savingsAED" name="Cost Savings (AED K)" fill="var(--dewa-green)" radius={[6,6,0,0]} barSize={26} opacity={0.85} />
+            <Line yAxisId="right" type="monotone" dataKey="hoursAutomated" name="Hours Automated" stroke="#ca8a04" strokeWidth={2.5} dot={{ r: 4, fill: '#ca8a04' }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
