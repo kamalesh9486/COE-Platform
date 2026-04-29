@@ -5,6 +5,7 @@ import SkillsTab         from './ps/SkillsTab'
 import PerformanceTab    from './ps/PerformanceTab'
 import '../people-skills.css'
 import Icon from '../components/Icon'
+import DataSourceBadge, { type DataSourceType } from '../components/DataSourceBadge'
 
 type TabId = 'people-adoption' | 'certifications' | 'skills' | 'performance'
 
@@ -14,6 +15,13 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'skills',          label: 'Skills',            icon: 'bi-tags-fill'        },
   { id: 'performance',     label: 'Performance Rating',icon: 'bi-star-fill'        },
 ]
+
+const TAB_SOURCE: Record<TabId, { type: DataSourceType; title: string }> = {
+  'people-adoption': { type: 'internal',  title: 'Live internal datasource' },
+  'certifications':  { type: 'simulated', title: 'Dummy data from backend'  },
+  'skills':          { type: 'simulated', title: 'Dummy data from backend'  },
+  'performance':     { type: 'simulated', title: 'Dummy data from backend'  },
+}
 
 export default function PeopleSkills() {
   const [activeTab, setActiveTab] = useState<TabId>('people-adoption')
@@ -27,12 +35,17 @@ export default function PeopleSkills() {
     }
   }
 
+  const src = TAB_SOURCE[activeTab]
+
   return (
     <div>
       {/* Page header */}
       <div className="page-header">
-        <h1 style={{ padding: '5px' }}>People &amp; Skills</h1>
-        <p>AI workforce capability — adoption, development, certifications and performance</p>
+        <div>
+          <h1 style={{ padding: '5px' }}>People &amp; Skills</h1>
+          <p>AI workforce capability — adoption, development, certifications and performance</p>
+        </div>
+        <DataSourceBadge type={src.type} title={src.title} />
       </div>
 
       {/* Inner tab navigation */}

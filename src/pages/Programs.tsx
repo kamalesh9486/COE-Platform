@@ -5,6 +5,7 @@ import type { Cr978_coe_programs, Cr978_coe_programsBase } from '../generated/mo
 import '../programs.css'
 import Icon from '../components/Icon'
 import { useScrollLock } from '../hooks/useScrollLock'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 // ── Map Dataverse record → Program ───────────────────────────
 function mapToProgram(r: Cr978_coe_programs): Program {
@@ -367,10 +368,11 @@ export default function Programs({ onNavigateToEvents }: Props) {
         </div>
       )}
 
-      <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div className="page-header">
         <div>
           <h1 style={{ padding: '5px' }}>Programs</h1>
           <p>AI initiatives and programs across all DEWA divisions</p>
+          <DataSourceBadge type="simulated" title="Manually seeded data" />
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -442,8 +444,8 @@ export default function Programs({ onNavigateToEvents }: Props) {
 
       {/* Programs grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
-          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, display: 'block', marginBottom: 10 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
+          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, marginBottom: 10 }} />
           Loading programs…
         </div>
       ) : filtered.length > 0 ? (
@@ -453,8 +455,8 @@ export default function Programs({ onNavigateToEvents }: Props) {
           ))}
         </div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
-          <Icon name="bi-folder2" style={{ fontSize: 32, display: 'block', marginBottom: 10 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
+          <Icon name="bi-folder2" style={{ fontSize: 32, marginBottom: 10 }} />
           No programs match the current filters
         </div>
       )}

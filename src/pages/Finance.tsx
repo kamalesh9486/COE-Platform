@@ -372,8 +372,8 @@ export default function Finance() {
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#9ca3af', fontSize: 14 }}>
-          <Icon name="bi-arrow-repeat" size={28} style={{ display: 'block', marginBottom: 10 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px', color: '#9ca3af', fontSize: 14 }}>
+          <Icon name="bi-arrow-repeat" size={28} style={{ marginBottom: 10 }} />
           Loading divisions…
         </div>
       )}
@@ -462,9 +462,11 @@ export default function Finance() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '48px 24px', color: '#9ca3af' }}>
-                    <Icon name="bi-inbox" size={32} style={{ display: 'block', marginBottom: 10 }} />
-                    No divisions match the current filters
+                  <td colSpan={9} style={{ padding: '48px 24px', color: '#9ca3af' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Icon name="bi-inbox" size={32} style={{ marginBottom: 10 }} />
+                      No divisions match the current filters
+                    </div>
                   </td>
                 </tr>
               )}
@@ -544,8 +546,8 @@ export default function Finance() {
             )
           })}
           {filtered.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid rgba(0,117,96,0.12)', color: '#9ca3af' }}>
-              <Icon name="bi-inbox" size={32} style={{ display: 'block', marginBottom: 10 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid rgba(0,117,96,0.12)', color: '#9ca3af' }}>
+              <Icon name="bi-inbox" size={32} style={{ marginBottom: 10 }} />
               No divisions match the current filters
             </div>
           )}

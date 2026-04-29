@@ -337,7 +337,12 @@ body {
 /* ── Page content ── */
 .page-content { padding: 28px 32px; flex: 1; }
 
-.page-header { margin-bottom: 28px; }
+.page-header {
+  margin-bottom: 28px;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.page-header > div:first-child { flex: 1 1 0; }
 .page-header h1 {
   font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
   font-size: 26px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.3px;
@@ -439,4 +444,29 @@ body {
   .topbar { padding: 0 10px; }
   .kpi-4-grid { grid-template-columns: repeat(2, 1fr); }
   .topbar-logo { height: 28px; }
+}
+
+/* ── Data source badge ─────────────────────────────────────────── */
+.ds-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  padding: 4px 10px 4px 8px; border-radius: 20px; flex-shrink: 0;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
+  margin-top: 4px;
+}
+.ds-badge::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.ds-badge--live      { color: #005a47; background: #e6f4f1; }
+.ds-badge--live::before { background: #007560; animation: ds-pulse 1.6s ease-in-out infinite; }
+.ds-badge--internal  { color: #0d4270; background: #e3f0fa; }
+.ds-badge--internal::before { background: #1d6fa5; }
+.ds-badge--simulated { color: #7a5a00; background: #fef9e7; }
+.ds-badge--simulated::before { background: #ca8a04; }
+.ds-badge--mixed     { color: #4a2d80; background: #f0eafa; }
+.ds-badge--mixed::before { background: #6e44b2; }
+
+@keyframes ds-pulse {
+  0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,117,96,0.5); }
+  50%      { opacity: 0.85; box-shadow: 0 0 0 4px rgba(0,117,96,0); }
 }

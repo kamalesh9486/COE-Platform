@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, Cell, ComposedChart, Line,
 } from 'recharts'
 import Icon from '../components/Icon'
+import DataSourceBadge from '../components/DataSourceBadge'
 import '../al-hasbah.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -996,8 +997,11 @@ export default function AlHasbah() {
     <div className="alh-root">
       {/* ── Hero ── */}
       <div className="page-header">
-        <h1 style={{ padding: '5px' }}>AL Hasbah</h1>
-        <p>Live AI Use Cases Across Dewa's Division and Department</p>
+        <div>
+          <h1 style={{ padding: '5px' }}>AL Hasbah</h1>
+          <p>Live AI Use Cases Across Dewa's Division and Department</p>
+        </div>
+        <DataSourceBadge type="simulated" title="Dummy data" />
       </div>
 
       {/* ── KPI Row ── */}

@@ -9,8 +9,6 @@ import type { Cr978_coe_departments }   from '../../generated/models/Cr978_coe_d
 import type { Cr978_coe_approles }      from '../../generated/models/Cr978_coe_approlesModel'
 import Icon from '../../components/Icon'
 
-type AdoptionStatus = 'Active' | 'Inactive'
-
 interface EmployeeRow {
   id:         string
   name:       string
@@ -19,10 +17,8 @@ interface EmployeeRow {
   division:   string
   department: string
   aiTools:    string[]
-  status:     AdoptionStatus
 }
 
-// Build lookup maps: GUID → display name
 type DivMap  = Map<string, string>
 type DeptMap = Map<string, string>
 type RoleMap = Map<string, string>
@@ -33,13 +29,9 @@ function mapToPerson(
   deptMap: DeptMap,
   roleMap: RoleMap,
 ): EmployeeRow {
-  // _cr978_coe_division_value  = GUID FK → compare with cr978_coe_divisionid
-  // _cr978_departmentid_value  = GUID FK → compare with cr978_coe_departmentid
-  // _cr978_roleid_value        = GUID FK → compare with cr978_coe_approleid
-  const divName  = (r._cr978_coe_division_value  ? divMap.get(r._cr978_coe_division_value)  : undefined) ?? ''
-  const deptName = (r._cr978_departmentid_value   ? deptMap.get(r._cr978_departmentid_value)  : undefined) ?? ''
-  const roleName = (r._cr978_roleid_value         ? roleMap.get(r._cr978_roleid_value)         : undefined) ?? ''
-
+  const divName  = (r._cr978_coe_division_value ? divMap.get(r._cr978_coe_division_value)   : undefined) ?? ''
+  const deptName = (r._cr978_departmentid_value  ? deptMap.get(r._cr978_departmentid_value)  : undefined) ?? ''
+  const roleName = (r._cr978_roleid_value        ? roleMap.get(r._cr978_roleid_value)         : undefined) ?? ''
   return {
     id:         r.cr978_coe_personid,
     name:       r.cr978_personname,
@@ -48,19 +40,66 @@ function mapToPerson(
     division:   divName,
     department: deptName,
     aiTools:    ['Copilot'],
-    status:     r.statecode === 0 ? 'Active' : 'Inactive',
   }
 }
 
-function StatusBadge({ status }: { status: AdoptionStatus }) {
-  const cls = status === 'Active' ? 'active' : 'notstarted'
-  return (
-    <span className={`ps-status ps-status-${cls}`}>
-      <span className="ps-status-dot" />
-      {status}
-    </span>
-  )
+// keyword → icon — only icons embedded in Icon.tsx are used here
+const ROLE_KEYWORD_ICONS: [string, string][] = [
+  ['director',    'bi-building'],
+  ['vp',          'bi-building'],
+  ['chief',       'bi-building'],
+  ['head',        'bi-award-fill'],
+  ['manager',     'bi-kanban-fill'],
+  ['lead',        'bi-star-fill'],
+  ['supervisor',  'bi-star-fill'],
+  ['architect',   'bi-diagram-3-fill'],
+  ['developer',   'bi-code-slash'],
+  ['programmer',  'bi-code-slash'],
+  ['engineer',    'bi-cpu-fill'],
+  ['analyst',     'bi-bar-chart-line-fill'],
+  ['data',        'bi-database-exclamation'],
+  ['scientist',   'bi-lightbulb-fill'],
+  ['researcher',  'bi-search'],
+  ['designer',    'bi-grid-3x3-gap'],
+  ['consultant',  'bi-person-video3'],
+  ['specialist',  'bi-star-fill'],
+  ['coordinator', 'bi-clipboard-check-fill'],
+  ['officer',     'bi-shield-check'],
+  ['admin',       'bi-key-fill'],
+  ['security',    'bi-shield-check'],
+  ['finance',     'bi-currency-dirham'],
+  ['legal',       'bi-file-text'],
+  ['hr',          'bi-people-fill'],
+  ['human',       'bi-people-fill'],
+  ['project',     'bi-clipboard-check-fill'],
+  ['product',     'bi-collection-fill'],
+  ['operations',  'bi-gear'],
+  ['ops',         'bi-gear'],
+  ['support',     'bi-chat-dots-fill'],
+  ['trainer',     'bi-mortarboard-fill'],
+  ['champion',    'bi-trophy-fill'],
+  ['practitioner','bi-tools'],
+  ['user',        'bi-person'],
+  ['intern',      'bi-person'],
+]
+const DEFAULT_ROLE_ICON = 'bi-person'
+
+function roleIcon(role: string): string {
+  const lower = role.toLowerCase()
+  for (const [kw, icon] of ROLE_KEYWORD_ICONS) {
+    if (lower.includes(kw)) return icon
+  }
+  return DEFAULT_ROLE_ICON
 }
+
+const ROLE_COLOURS = [
+  { color: '#005a47', bg: 'rgba(0,90,71,0.09)'   },
+  { color: '#b07d10', bg: 'rgba(202,138,4,0.10)' },
+  { color: '#0d4270', bg: 'rgba(13,66,112,0.09)' },
+  { color: '#6e44b2', bg: 'rgba(110,68,178,0.09)'},
+  { color: '#0e7490', bg: 'rgba(14,116,144,0.09)'},
+  { color: '#9f1239', bg: 'rgba(159,18,57,0.09)' },
+]
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -74,11 +113,10 @@ export default function PeopleAdoptionTab() {
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState<string | null>(null)
 
-  const [search,       setSearch]       = useState('')
-  const [divFilter,    setDivFilter]    = useState('All')
-  const [deptFilter,   setDeptFilter]   = useState('All')
-  const [roleFilter,   setRoleFilter]   = useState('All')
-  const [statusFilter, setStatusFilter] = useState<AdoptionStatus | 'All'>('All')
+  const [search,     setSearch]     = useState('')
+  const [divFilter,  setDivFilter]  = useState('All')
+  const [deptFilter, setDeptFilter] = useState('All')
+  const [roleFilter, setRoleFilter] = useState('All')
 
   useEffect(() => {
     Promise.all([
@@ -91,7 +129,6 @@ export default function PeopleAdoptionTab() {
       const deptsData = depts.data ?? []
       const rolesData = roles.data ?? []
 
-      // Build Maps: id → name
       const divMap:  DivMap  = new Map(divsData.map(d  => [d.cr978_coe_divisionid,   d.cr978_divisionname]))
       const deptMap: DeptMap = new Map(deptsData.map(d => [d.cr978_coe_departmentid, d.cr978_departmentname]))
       const roleMap: RoleMap = new Map(rolesData.map(r => [r.cr978_coe_approleid,    r.cr978_rolename]))
@@ -108,21 +145,33 @@ export default function PeopleAdoptionTab() {
     }).finally(() => setLoading(false))
   }, [])
 
-  const total    = employees.length
-  const active   = employees.filter(e => e.status === 'Active').length
-  const inactive = employees.filter(e => e.status === 'Inactive').length
+  // Count by role across all employees (unfiltered)
+  const roleCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const e of employees) {
+      const label = e.role || 'Unassigned'
+      counts.set(label, (counts.get(label) ?? 0) + 1)
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([role, count], i) => ({
+        role, count,
+        icon:  roleIcon(role),
+        color: ROLE_COLOURS[i % ROLE_COLOURS.length].color,
+        bg:    ROLE_COLOURS[i % ROLE_COLOURS.length].bg,
+      }))
+  }, [employees])
 
   const filtered = useMemo(() => {
     return employees.filter(e => {
       const q      = search.toLowerCase()
       const matchQ = !q || e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.department.toLowerCase().includes(q)
-      const matchD    = divFilter    === 'All' || e.division   === divFilter
-      const matchDept = deptFilter   === 'All' || e.department === deptFilter
-      const matchR    = roleFilter   === 'All' || e.role       === roleFilter
-      const matchS    = statusFilter === 'All' || e.status     === statusFilter
-      return matchQ && matchD && matchDept && matchR && matchS
+      const matchD    = divFilter  === 'All' || e.division   === divFilter
+      const matchDept = deptFilter === 'All' || e.department === deptFilter
+      const matchR    = roleFilter === 'All' || e.role       === roleFilter
+      return matchQ && matchD && matchDept && matchR
     })
-  }, [employees, search, divFilter, deptFilter, roleFilter, statusFilter])
+  }, [employees, search, divFilter, deptFilter, roleFilter])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -133,30 +182,42 @@ export default function PeopleAdoptionTab() {
         </div>
       )}
 
-      {/* KPI stats */}
-      <div className="ps-stat-row">
-        {[
-          { label: 'Total Employees', value: total,    icon: 'bi-people-fill',       bg: 'rgba(0,51,102,0.08)',   color: '#003366' },
-          { label: 'Active',          value: active,   icon: 'bi-check-circle-fill', bg: 'rgba(22,163,74,0.1)',   color: '#16a34a' },
-          { label: 'Inactive',        value: inactive, icon: 'bi-x-circle',          bg: 'rgba(239,68,68,0.1)',   color: '#dc2626' },
-        ].map(s => (
-          <div className="ps-stat-mini" key={s.label}>
-            <div className="ps-stat-mini-icon" style={{ background: s.bg, color: s.color }}>
-              <Icon name={s.icon} />
+      {/* Role breakdown cards */}
+      {loading ? (
+        <div className="ps-stat-row">
+          {[1, 2, 3].map(i => (
+            <div className="ps-stat-mini" key={i} style={{ opacity: 0.4 }}>
+              <div className="ps-stat-mini-icon" style={{ background: '#f3f4f6', color: '#9ca3af' }}>
+                <Icon name="bi-person-fill" />
+              </div>
+              <div>
+                <div className="ps-stat-mini-val">—</div>
+                <div className="ps-stat-mini-lbl">Loading…</div>
+              </div>
             </div>
-            <div>
-              <div className="ps-stat-mini-val" style={{ color: s.color }}>{s.value}</div>
-              <div className="ps-stat-mini-lbl">{s.label}</div>
+          ))}
+        </div>
+      ) : (
+        <div className="ps-stat-row" style={{ flexWrap: 'wrap' }}>
+          {roleCounts.map(r => (
+            <div className="ps-stat-mini" key={r.role}>
+              <div className="ps-stat-mini-icon" style={{ background: r.bg, color: r.color }}>
+                <Icon name={r.icon} />
+              </div>
+              <div>
+                <div className="ps-stat-mini-val" style={{ color: r.color }}>{r.count}</div>
+                <div className="ps-stat-mini-lbl">{r.role}</div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Table card */}
       <div className="ps-card">
         <div className="ps-card-header">
           <span className="ps-card-title"><Icon name="bi-table" /> Employee Adoption Detail</span>
-          <span style={{ fontSize: 12, color: '#9ca3af' }}>{filtered.length} of {total} employees</span>
+          <span style={{ fontSize: 12, color: '#9ca3af' }}>{filtered.length} of {employees.length} employees</span>
         </div>
 
         {/* Filters */}
@@ -191,11 +252,6 @@ export default function PeopleAdoptionTab() {
               </option>
             ))}
           </select>
-          <select className="ps-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value as AdoptionStatus | 'All')}>
-            <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
         </div>
 
         <div className="ps-table-wrap">
@@ -208,13 +264,12 @@ export default function PeopleAdoptionTab() {
                 <th>Division</th>
                 <th>Department</th>
                 <th>AI Tools Used</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: '#9ca3af', padding: 32 }}>
+                  <td colSpan={6} style={{ textAlign: 'center', color: '#9ca3af', padding: 32 }}>
                     <Icon name="bi-arrow-repeat" style={{ marginRight: 6 }} />Loading employees…
                   </td>
                 </tr>
@@ -236,12 +291,11 @@ export default function PeopleAdoptionTab() {
                       {e.aiTools.map(t => <span key={t} className="ps-tool-tag">{t}</span>)}
                     </div>
                   </td>
-                  <td><StatusBadge status={e.status} /></td>
                 </tr>
               ))}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: '#9ca3af', padding: 32 }}>
+                  <td colSpan={6} style={{ textAlign: 'center', color: '#9ca3af', padding: 32 }}>
                     No employees match the current filters
                   </td>
                 </tr>

@@ -6,6 +6,7 @@ import CalendarView from './prog/CalendarView'
 import '../programs.css'
 import Icon from '../components/Icon'
 import { useScrollLock } from '../hooks/useScrollLock'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 // ── Map Dataverse record → AppEvent ──────────────────────────
 function mapToAppEvent(r: Cr978_coe_eventses, divisionMap: Map<string, string>): AppEvent {
@@ -314,8 +315,8 @@ function EventModal({ event: ev, onClose }: { event: AppEvent; onClose: () => vo
 function ListView({ events, onSelect }: { events: AppEvent[]; onSelect: (ev: AppEvent) => void }) {
   if (events.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
-        <Icon name="bi-calendar-x" style={{ fontSize: 32, display: 'block', marginBottom: 10 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid #e5e7eb', color: '#9ca3af' }}>
+        <Icon name="bi-calendar-x" style={{ fontSize: 32, marginBottom: 10 }} />
         No events in this category
       </div>
     )
@@ -532,8 +533,11 @@ export default function Events({ fromProgram, onBackToPrograms }: EventsProps = 
         <ProgramDetailPanel program={fromProgram} onBack={onBackToPrograms ?? (() => {})} />
       ) : (
         <div className="page-header">
-          <h1>Events</h1>
-          <p>Workshops, seminars, hackathons and webinars across all AI programs</p>
+          <div>
+            <h1>Events</h1>
+            <p>Workshops, seminars, hackathons and webinars across all AI programs</p>
+          </div>
+          <DataSourceBadge type="simulated" title="Manually seeded data" />
         </div>
       )}
 
@@ -596,8 +600,8 @@ export default function Events({ fromProgram, onBackToPrograms }: EventsProps = 
 
       {/* Content */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '48px 24px', color: '#9ca3af' }}>
-          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, display: 'block', marginBottom: 10 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', color: '#9ca3af' }}>
+          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, marginBottom: 10 }} />
           Loading events…
         </div>
       ) : viewMode === 'list' ? (

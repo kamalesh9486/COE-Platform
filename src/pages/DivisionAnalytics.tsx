@@ -3,6 +3,7 @@ import AdoptionTab from './ps/AdoptionTab'
 import AdkarTab    from './ps/AdkarTab'
 import '../people-skills.css'
 import Icon from '../components/Icon'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 type TabId = 'adoption' | 'adkar'
 
@@ -17,8 +18,11 @@ export default function DivisionAnalytics() {
   return (
     <div>
       <div className="page-header">
-        <h1 style={{ padding: '5px' }}>Division Analytics</h1>
-        <p>AI adoption rates and ADKAR change-readiness scores across all DEWA divisions</p>
+        <div>
+          <h1 style={{ padding: '5px' }}>Division Analytics</h1>
+          <p>AI adoption rates and ADKAR change-readiness scores across all DEWA divisions</p>
+        </div>
+        <DataSourceBadge type="simulated" title="Dummy data from backend" />
       </div>
 
       <div className="ps-tab-nav" role="tablist">

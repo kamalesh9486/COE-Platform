@@ -8,6 +8,7 @@ import { Cr978_coe_aiincidentsService } from '../generated'
 import type { Cr978_coe_aiincidents } from '../generated/models/Cr978_coe_aiincidentsModel'
 import Icon from '../components/Icon'
 import { useScrollLock } from '../hooks/useScrollLock'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -444,8 +445,11 @@ export default function AIIncident() {
   return (
     <div>
       <div className="page-header">
-        <h1>AI Incidents</h1>
-        <p>Track, investigate and resolve AI-related incidents across all DEWA divisions</p>
+        <div>
+          <h1>AI Incidents</h1>
+          <p>Track, investigate and resolve AI-related incidents across all DEWA divisions</p>
+        </div>
+        <DataSourceBadge type="simulated" title="Dummy data fed through AI agent" />
       </div>
 
       {error && (
@@ -582,8 +586,8 @@ export default function AIIncident() {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 24px', color: '#9ca3af', fontSize: 14 }}>
-          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, display: 'block', marginBottom: 10, animation: 'spin 1s linear infinite' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px', color: '#9ca3af', fontSize: 14 }}>
+          <Icon name="bi-arrow-repeat" style={{ fontSize: 28, marginBottom: 10, animation: 'spin 1s linear infinite' }} />
           Loading incidents…
         </div>
       )}
@@ -674,9 +678,11 @@ export default function AIIncident() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={11} style={{ textAlign: 'center', padding: '48px 24px', color: '#9ca3af' }}>
-                    <Icon name="bi-shield-check" style={{ fontSize: 32, display: 'block', marginBottom: 10 }} />
-                    No incidents match the current filters
+                  <td colSpan={11} style={{ padding: '48px 24px', color: '#9ca3af' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Icon name="bi-shield-check" style={{ fontSize: 32, marginBottom: 10 }} />
+                      No incidents match the current filters
+                    </div>
                   </td>
                 </tr>
               )}
@@ -733,8 +739,8 @@ export default function AIIncident() {
             )
           })}
           {filtered.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid rgba(0,117,96,0.12)', color: '#9ca3af' }}>
-              <Icon name="bi-shield-check" style={{ fontSize: 32, display: 'block', marginBottom: 10 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', background: '#fff', borderRadius: 14, border: '1px solid rgba(0,117,96,0.12)', color: '#9ca3af' }}>
+              <Icon name="bi-shield-check" style={{ fontSize: 32, marginBottom: 10 }} />
               No incidents match the current filters
             </div>
           )}

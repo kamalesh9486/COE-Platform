@@ -273,54 +273,61 @@
 .ciq-body::-webkit-scrollbar-track { background: transparent; }
 .ciq-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-/* ── Welcome ── */
+/* ── Welcome shell ── */
 .ciq-welcome {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 16px 8px 8px;
-  gap: 10px;
+  gap: 14px;
   flex: 1;
 }
 
-.ciq-welcome-orb {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #007560, #003828);
+/* Subtle entrance for the greeting bubble */
+.ciq-msg--greet {
+  animation: ciq-msg-in 0.35s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes ciq-msg-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Quick prompts wrapper — fades in after greeting finishes ── */
+.ciq-quick-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: ciq-fade-up 0.4s ease both;
+}
+
+@keyframes ciq-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section separator ── */
+.ciq-greet-sep {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 10px rgba(0,117,96,0.08), 0 0 0 20px rgba(0,117,96,0.04);
-  animation: ciq-orb-pulse 3s ease-in-out infinite;
-}
-
-@keyframes ciq-orb-pulse {
-  0%, 100% { box-shadow: 0 0 0 10px rgba(0,117,96,0.08), 0 0 0 20px rgba(0,117,96,0.04); }
-  50%       { box-shadow: 0 0 0 14px rgba(0,117,96,0.12), 0 0 0 28px rgba(0,117,96,0.06); }
-}
-
-.ciq-welcome-title {
-  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
-  font-size: 18px;
+  gap: 8px;
+  font-size: 10px;
   font-weight: 700;
-  color: #fff;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ciq-greet-sep::before,
+.ciq-greet-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.07);
 }
 
-.ciq-welcome-sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.45);
-  line-height: 1.6;
-  max-width: 280px;
-}
-
+/* ── Quick prompts grid ── */
 .ciq-quick-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   width: 100%;
-  margin-top: 6px;
 }
 
 .ciq-quick-btn {

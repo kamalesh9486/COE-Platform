@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts'
 import Icon from '../components/Icon'
+import DataSourceBadge from '../components/DataSourceBadge'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 import { Cr978_coe_divisionsService } from '../generated/services/Cr978_coe_divisionsService'
 import type { Cr978_coe_divisions } from '../generated/models/Cr978_coe_divisionsModel'
@@ -11,6 +12,7 @@ import '../executive-summary.css'
 
 type ProgStatus = 'live' | 'pilot' | 'dev' | 'risk'
 type ActiveKpi  = 'trained' | 'projects' | 'impact' | 'adoption' | 'issues' | null
+type HeatCell   = { label: string; month: string; value: number; x: number; y: number } | null
 
 // ─── Static chart data ────────────────────────────────────────────────────────
 const TECH_DATA = [
@@ -133,6 +135,7 @@ export default function ExecutiveSummary() {
   const [activeKpi,  setActiveKpi]  = useState<ActiveKpi>(null)
   const [divisions,  setDivisions]  = useState<Cr978_coe_divisions[]>([])
   const [divLoading,   setDivLoading]   = useState(true)
+  const [heatCell,   setHeatCell]   = useState<HeatCell>(null)
   const { name } = useCurrentUser()
 
   // Section refs for scroll-to on KPI click
@@ -208,6 +211,7 @@ export default function ExecutiveSummary() {
           <h1>{greeting(name)} Here&apos;s where DEWA&apos;s AI transformation stands today.</h1>
           <p className="es-page-sub">Tracking 47 live programmes · 18,400 trained · AED 84.2M impact · FY26 Q2 · Apr 01–20, 2026</p>
         </div>
+        <DataSourceBadge type="simulated" title="Dummy data from backend" />
       </div>
 
       <div className="es-page">
@@ -373,10 +377,10 @@ export default function ExecutiveSummary() {
 
             {/* Donut */}
             <div className="es-donut-wrap">
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={adoptionBuckets} cx="50%" cy="50%" innerRadius={58} outerRadius={85}
-                    dataKey="value" startAngle={90} endAngle={-270} paddingAngle={2}>
+                  <Pie data={adoptionBuckets} cx="50%" cy="50%" innerRadius={62} outerRadius={92}
+                    dataKey="value" startAngle={90} endAngle={-270} paddingAngle={3}>
                     {adoptionBuckets.map((b, i) => <Cell key={i} fill={b.color} />)}
                   </Pie>
                   <Tooltip contentStyle={TT} labelStyle={TT_LABEL} itemStyle={TT_ITEM} />
@@ -407,12 +411,7 @@ export default function ExecutiveSummary() {
                 <span className="es-wf-col-label">FY26 target</span>
                 <span className="es-wf-col-val">80%</span>
               </div>
-              <div className="es-wf-col" style={{ textAlign: 'center' }}>
-                <span className="es-wf-col-label">Gap</span>
-                <span className="es-wf-col-val" style={{ color: avgAdoptionRate >= 80 ? '#17944a' : '#d98c0a' }}>
-                  {avgAdoptionRate >= 80 ? 'Achieved' : `${80 - avgAdoptionRate} pt`}
-                </span>
-              </div>
+             
               <div className="es-wf-col" style={{ textAlign: 'right' }}>
                 <span className="es-wf-col-label">Leading div.</span>
                 <span className="es-wf-col-val">
@@ -448,11 +447,22 @@ export default function ExecutiveSummary() {
                   {div.row.map((v, i) => (
                     <div key={i} className="es-heat-cell"
                       style={{ background: heatColor(v, 12) }}
-                      title={`${div.label} · ${HEAT_MONTHS[i]} · AED ${v.toFixed(1)}M`} />
+                      onMouseEnter={e => {
+                        const r = e.currentTarget.getBoundingClientRect()
+                        setHeatCell({ label: div.label, month: HEAT_MONTHS[i], value: v, x: r.left + r.width / 2, y: r.top })
+                      }}
+                      onMouseLeave={() => setHeatCell(null)}
+                    />
                   ))}
                 </div>
               ))}
             </div>
+            {heatCell && (
+              <div className="es-heat-tooltip" style={{ left: heatCell.x, top: heatCell.y }}>
+                <div className="es-tooltip-label">{heatCell.label}</div>
+                <div className="es-tooltip-val">{heatCell.month} · <strong>AED {heatCell.value.toFixed(1)}M</strong></div>
+              </div>
+            )}
             <div className="es-heat-footer">
               <div className="es-heat-scale">
                 <span>0 AED</span>

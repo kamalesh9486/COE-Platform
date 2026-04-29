@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import '../command-iq.css'
 import Icon from './Icon'
 import { useScrollLock } from '../hooks/useScrollLock'
+import { useCurrentUser } from '../hooks/useCurrentUser'
 import { MicrosoftCopilotStudioService } from '../generated/services/MicrosoftCopilotStudioService'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -19,7 +20,16 @@ interface Message {
 
 // ─── Agent config ─────────────────────────────────────────────────────────────
 
-const AGENT_NAME = 'cr978_sharePointQueryAssistant'
+const AGENT_NAME = 'copilots_header_da4fe'
+
+// ─── Greeting ────────────────────────────────────────────────────────────────
+
+function buildGreeting(firstName: string): string {
+  const h = new Date().getHours()
+  const part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+  const name = firstName ? `, ${firstName}` : ''
+  return `${part}${name}. I'm **Command IQ** — DEWA COE's AI intelligence assistant. Ask me anything about AI adoption, programme health, incidents, governance, finance, or the strategic roadmap.`
+}
 
 // ─── Quick prompts ────────────────────────────────────────────────────────────
 
@@ -66,17 +76,27 @@ export default function CommandIQ() {
   const [thinking, setThinking]   = useState(false)
   const [unread, setUnread]       = useState(0)
   const [copiedId, setCopiedId]   = useState<string | null>(null)
+  const [greetText, setGreetText] = useState('')
+  const [greetDone, setGreetDone] = useState(false)
+  const [greetKey, setGreetKey]   = useState(0)
+  const { name } = useCurrentUser()
+  const firstName = name?.split(' ')[0] || ''
   const bottomRef               = useRef<HTMLDivElement>(null)
   const inputRef                = useRef<HTMLInputElement>(null)
   const streamRef               = useRef<ReturnType<typeof setInterval> | null>(null)
+  const greetTimerRef           = useRef<ReturnType<typeof setInterval> | null>(null)
+  const greetTimeRef            = useRef(new Date())
   // A fresh UUID on every mount guarantees a new Copilot Studio conversation on each page load.
   // Passing an unrecognised ID forces the backend to create a fresh session rather than
   // resuming the user's last server-side conversation when no ID is provided.
   const conversationIdRef       = useRef<string>(crypto.randomUUID())
 
-  // Clear stream interval on unmount to prevent memory leak
+  // Clear intervals on unmount
   useEffect(() => {
-    return () => { if (streamRef.current) clearInterval(streamRef.current) }
+    return () => {
+      if (streamRef.current)  clearInterval(streamRef.current)
+      if (greetTimerRef.current) clearInterval(greetTimerRef.current)
+    }
   }, [])
 
   // Auto-scroll
@@ -84,13 +104,35 @@ export default function CommandIQ() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, thinking])
 
-  // Focus input when opened
+  // Focus input when opened; bump greetKey to replay animation
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 320)
       setUnread(0)
+      setGreetKey(k => k + 1)
     }
   }, [open])
+
+  // Greeting typewriter — fires each time panel opens with an empty chat
+  useEffect(() => {
+    if (greetKey === 0) return
+    if (greetTimerRef.current) clearInterval(greetTimerRef.current)
+    setGreetText('')
+    setGreetDone(false)
+    greetTimeRef.current = new Date()
+    const full = buildGreeting(firstName)
+    let i = 0
+    greetTimerRef.current = setInterval(() => {
+      i += 2
+      setGreetText(full.slice(0, i))
+      if (i >= full.length) {
+        clearInterval(greetTimerRef.current!)
+        setGreetDone(true)
+      }
+    }, 18)
+    return () => { if (greetTimerRef.current) clearInterval(greetTimerRef.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [greetKey])
 
   // Lock background scroll while panel is open (conditional, reference-counted)
   useScrollLock(open)
@@ -258,7 +300,7 @@ export default function CommandIQ() {
                 className="ciq-icon-btn"
                 title="New conversation"
                 aria-label="Start new conversation"
-                onClick={() => { setMessages([]); conversationIdRef.current = crypto.randomUUID() }}
+                onClick={() => { setMessages([]); conversationIdRef.current = crypto.randomUUID(); setGreetKey(k => k + 1) }}
               >
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -288,41 +330,56 @@ export default function CommandIQ() {
         {/* Messages */}
         <div className="ciq-body">
 
-          {/* Empty state */}
+          {/* Empty state — greeting message from bot */}
           {isEmpty && (
             <div className="ciq-welcome">
-              <div className="ciq-welcome-orb">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="2.8" fill="white"/>
-                  <circle cx="12" cy="4"   r="1.8" fill="white" opacity="0.85"/>
-                  <circle cx="12" cy="20"  r="1.8" fill="white" opacity="0.85"/>
-                  <circle cx="4"  cy="8"   r="1.8" fill="white" opacity="0.85"/>
-                  <circle cx="20" cy="8"   r="1.8" fill="white" opacity="0.85"/>
-                  <circle cx="4"  cy="16"  r="1.8" fill="white" opacity="0.85"/>
-                  <circle cx="20" cy="16"  r="1.8" fill="white" opacity="0.85"/>
-                  <line x1="12" y1="5.8"  x2="12" y2="9.2"  stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="12" y1="14.8" x2="12" y2="18.2" stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="5.4" y1="8.9"  x2="9.4"  y2="11.1" stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="14.6" y1="12.9" x2="18.6" y2="15.1" stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="5.4" y1="15.1" x2="9.4"  y2="12.9" stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="14.6" y1="11.1" x2="18.6" y2="8.9"  stroke="white" strokeWidth="1.2" opacity="0.6"/>
-                </svg>
-              </div>
-              <div className="ciq-welcome-title">Command IQ</div>
-              <div className="ciq-welcome-sub">Your AI intelligence assistant for DEWA COE. Ask anything about adoption, incidents, finance, risk, or the strategic roadmap.</div>
 
-              <div className="ciq-quick-grid">
-                {QUICK_PROMPTS.map(p => (
-                  <button
-                    key={p.label}
-                    className="ciq-quick-btn"
-                    onClick={() => sendMessage(p.query)}
-                  >
-                    <span className="ciq-quick-icon"><Icon name={p.icon} /></span>
-                    <span className="ciq-quick-label">{p.label}</span>
-                  </button>
-                ))}
-              </div>
+              {/* AI greeting bubble — types itself out */}
+              {greetText && (
+                <div className="ciq-msg ciq-msg--ai ciq-msg--greet">
+                  <div className="ciq-msg-avatar">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="2.5" fill="white"/>
+                      <circle cx="12" cy="5"  r="1.6" fill="white" opacity="0.8"/>
+                      <circle cx="12" cy="19" r="1.6" fill="white" opacity="0.8"/>
+                      <circle cx="5"  cy="8.5"  r="1.6" fill="white" opacity="0.8"/>
+                      <circle cx="19" cy="8.5"  r="1.6" fill="white" opacity="0.8"/>
+                      <circle cx="5"  cy="15.5" r="1.6" fill="white" opacity="0.8"/>
+                      <circle cx="19" cy="15.5" r="1.6" fill="white" opacity="0.8"/>
+                    </svg>
+                  </div>
+                  <div className="ciq-msg-col">
+                    <div
+                      className="ciq-bubble"
+                      dangerouslySetInnerHTML={{
+                        __html: parseMarkdown(greetText) + (!greetDone ? '<span class="ciq-cursor">▋</span>' : ''),
+                      }}
+                    />
+                    <div className="ciq-msg-foot">
+                      <span className="ciq-msg-time">{fmtTime(greetTimeRef.current)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick prompts — fade in after greeting finishes */}
+              {greetDone && (
+                <div className="ciq-quick-wrap">
+                  <div className="ciq-greet-sep">What would you like to explore?</div>
+                  <div className="ciq-quick-grid">
+                    {QUICK_PROMPTS.map(p => (
+                      <button
+                        key={p.label}
+                        className="ciq-quick-btn"
+                        onClick={() => sendMessage(p.query)}
+                      >
+                        <span className="ciq-quick-icon"><Icon name={p.icon} /></span>
+                        <span className="ciq-quick-label">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

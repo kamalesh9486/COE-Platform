@@ -1,13 +1,17 @@
 import AIToolsTab from './ps/AIToolsTab'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import '../people-skills.css'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 export default function TechnologyStack() {
   return (
     <div>
       <div className="page-header">
-        <h1 style={{ padding: '5px' }}>Technology Stack</h1>
-        <p>AI tools deployed across divisions — usage, adoption and departmental coverage</p>
+        <div>
+          <h1 style={{ padding: '5px' }}>Technology Stack</h1>
+          <p>AI tools deployed across divisions — usage, adoption and departmental coverage</p>
+        </div>
+        <DataSourceBadge type="mixed" title="Microsoft Copilot agent: live · All other tools: simulated" />
       </div>
       <ErrorBoundary>
         <AIToolsTab />

@@ -11,6 +11,7 @@ import {
   Cr978_powerbidashboardscr978_priority as PRIORITY_ENUM,
 } from '../generated/models/Cr978_powerbidashboardsModel'
 import Icon from '../components/Icon'
+import DataSourceBadge from '../components/DataSourceBadge'
 import '../ai-command-center.css'
 
 // ── Status config ─────────────────────────────────────────────
@@ -153,6 +154,7 @@ export default function AICommandCenter() {
             Power BI dashboards powering DEWA's AI Centre of Excellence — analytics, adoption and performance in one place.
           </p>
         </div>
+        <DataSourceBadge type="live" title="Live Dataverse data" />
       </div>
 
       {/* ── Status KPIs ─────────────────────────────────── */}

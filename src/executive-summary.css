@@ -4,7 +4,8 @@
 .es-page-head {
   padding: 22px 0 16px;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
 }
@@ -157,17 +158,21 @@
 .es-tech-delta { font-size: 11px; color: #7a85a0; }
 
 /* ── Adoption Rate donut card ── */
-.es-donut-wrap { position: relative; }
+.es-donut-wrap { position: relative; height: 220px; }
 .es-donut-center {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   text-align: center; pointer-events: none;
 }
-.es-donut-pct { font-size: 28px; font-weight: 700; color: #141a2b; letter-spacing: -0.02em; line-height: 1; }
-.es-donut-label { font-size: 10px; color: #7a85a0; margin-top: 2px; }
+.es-donut-pct {
+  font-size: 30px; font-weight: 700; color: #141a2b;
+  letter-spacing: -0.02em; line-height: 1;
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
+}
+.es-donut-label { font-size: 11px; color: #7a85a0; margin-top: 3px; font-weight: 500; }
 
 @media (min-width: 1280px) {
-  .es-donut-pct { font-size: 32px; }
+  .es-donut-pct { font-size: 34px; }
 }
 .es-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .es-legend-row {
@@ -284,6 +289,24 @@
 }
 .es-tooltip-label { color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 4px; }
 .es-tooltip-val   { color: #fff; font-weight: 600; margin-top: 2px; }
+
+/* ── Heatmap hover tooltip ── */
+.es-heat-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: rgba(20,26,43,0.95);
+  border-radius: 8px;
+  padding: 8px 13px;
+  font-size: 12px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.28);
+  font-family: 'Dubai', 'Segoe UI', system-ui, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 200;
+}
+.es-heat-tooltip .es-tooltip-label { color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 3px; }
+.es-heat-tooltip .es-tooltip-val   { color: #fff; font-weight: 600; }
 
 /* ════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS

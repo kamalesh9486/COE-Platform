@@ -12,6 +12,8 @@
 /* ── Page header ─────────────────────────────────────────────── */
 .acc-page-header {
   margin-bottom: 4px;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap;
 }
 .acc-page-title {
   font-size: 22px;

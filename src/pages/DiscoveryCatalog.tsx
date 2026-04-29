@@ -11,6 +11,7 @@ import { Cr978_coe_personsService }     from '../generated/services/Cr978_coe_pe
 import type { Cr978_coe_discoveries as Discovery } from '../generated/models/Cr978_coe_discoveriesModel'
 import '../discovery-catalog.css'
 import Icon from '../components/Icon'
+import DataSourceBadge from '../components/DataSourceBadge'
 
 // ── Shared tooltip style ──────────────────────────────────────
 const TT_STYLE = {
@@ -510,8 +511,11 @@ export default function DiscoveryCatalog() {
   return (
     <div>
       <div className="page-header">
-        <h1 style={{ padding: '5px' }}>Discovery Catalog</h1>
-        <p>Live Dataverse data — all discoveries with AI type, SAP type, status, division &amp; department</p>
+        <div>
+          <h1 style={{ padding: '5px' }}>Discovery Catalog</h1>
+          <p>Live Dataverse data — all discoveries with AI type, SAP type, status, division &amp; department</p>
+        </div>
+        <DataSourceBadge type="live" title="Manually fed live data" />
       </div>
 
       {loading ? <LoadingState /> : error ? <ErrorState msg={error} onRetry={fetchData} /> : (
@@ -581,8 +585,10 @@ export default function DiscoveryCatalog() {
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="dc-empty-row">
-                      <Icon name="bi-inbox" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
-                      No discoveries match the current filters
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Icon name="bi-inbox" style={{ fontSize: 28, marginBottom: 8 }} />
+                        No discoveries match the current filters
+                      </div>
                     </td>
                   </tr>
                 ) : filtered.map(r => {
