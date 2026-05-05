@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 import dewaLogo from '../assets/dewa-logo.svg'
+import FloatingLines from './FloatingLines'
 import '../launch-screen.css'
+
 
 interface Props { onLaunch: () => void }
 
@@ -45,6 +47,12 @@ const MODULES = [
   { name: 'AI Command Center',  pct: 72,  color: '#ef4444' },
   { name: 'Finance',            pct: 60,  color: '#16a34a' },
 ]
+
+// Stable references — must live outside component to prevent FloatingLines re-mounting on every render
+const FL_GRADIENT  = ['#007560', '#004937', '#00b896', '#ca8a04']
+const FL_WAVES     = ['top', 'middle', 'bottom'] as const
+const FL_COUNT     = [4, 6, 4]
+const FL_DISTANCE  = [5, 4, 5]
 
 function CtxIcon({ type, accent }: { type: string; accent: string }) {
   if (type === 'doc') return (
@@ -136,8 +144,6 @@ function LaunchAnim() {
 
   return (
     <div className="la-scene">
-      <div className="la-grid-bg" />
-
       {/* Tab bar */}
       <div className="la-tab-bar">
         <div
@@ -426,6 +432,21 @@ export default function LaunchScreen({ onLaunch }: Props) {
           <span className="ls-bm-sep">·</span>
           <span className="ls-bm-tag">Q1 2026</span>
         </div>
+      </div>
+
+      {/* Full-screen floating lines overlay */}
+      <div className="ls-lines-overlay">
+        <FloatingLines
+          linesGradient={FL_GRADIENT}
+          enabledWaves={FL_WAVES}
+          lineCount={FL_COUNT}
+          lineDistance={FL_DISTANCE}
+          animationSpeed={0.6}
+          interactive={true}
+          parallax={true}
+          parallaxStrength={0.08}
+          mixBlendMode="normal"
+        />
       </div>
 
     </div>

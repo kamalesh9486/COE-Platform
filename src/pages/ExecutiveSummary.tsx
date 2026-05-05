@@ -209,7 +209,6 @@ export default function ExecutiveSummary() {
         <div className="es-page-head-text">
           <div className="es-page-eyebrow">Centre of Excellence · Artificial Intelligence</div>
           <h1>{greeting(name)} Here&apos;s where DEWA&apos;s AI transformation stands today.</h1>
-          <p className="es-page-sub">Tracking 47 live programmes · 18,400 trained · AED 84.2M impact · FY26 Q2 · Apr 01–20, 2026</p>
         </div>
         <DataSourceBadge type="simulated" title="Dummy data from backend" />
       </div>
@@ -225,7 +224,7 @@ export default function ExecutiveSummary() {
             >
               <div className="es-kpi-eyebrow">Employees trained</div>
               <div className="es-kpi-row">
-                <div className="es-kpi-value">18,401<span className="es-kpi-unit"> / 22k</span></div>
+                <div className="es-kpi-value">9087<span className="es-kpi-unit"> / 14k</span></div>
                 <span className="es-delta es-delta--up">+12.4%</span>
               </div>
               <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">
@@ -263,7 +262,7 @@ export default function ExecutiveSummary() {
             >
               <div className="es-kpi-eyebrow">Impact realised (AED)</div>
               <div className="es-kpi-row">
-                <div className="es-kpi-value">84.2<span className="es-kpi-unit">M</span></div>
+                <div className="es-kpi-value">34.3<span className="es-kpi-unit">M</span></div>
                 <span className="es-delta es-delta--up">+21.3%</span>
               </div>
               <svg viewBox="0 0 200 40" width="100%" height="36" preserveAspectRatio="none">

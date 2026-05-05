@@ -70,7 +70,15 @@
       "Bash(\"C:\\\\Users\\\\kkama\\\\.dotnet\\\\tools\\\\pac.exe\" code *)",
       "Bash(\"C:/Users/kkama/.dotnet/tools/pac.exe\" code *)",
       "Bash(node_modules/.bin/power-apps --help)",
-      "Bash(node_modules/.bin/power-apps add-data-source *)"
+      "Bash(node_modules/.bin/power-apps add-data-source *)",
+      "WebFetch(domain:www.reactbits.dev)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Skill(update-config)",
+      "WebFetch(domain:reactbits.dev)",
+      "mcp__shadcn__search_items_in_registries",
+      "mcp__shadcn__get_project_registries",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

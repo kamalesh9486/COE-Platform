@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 
 export type ProgramStatus = 'Active' | 'Completed' | 'Upcoming'
-export type EventType     = 'Workshop' | 'Seminar' | 'Hackathon' | 'Webinar' | 'Town Hall'
+export type EventType     = 'Workshop' | 'Seminar' | 'Hackathon' | 'Webinar' | 'Town Hall' | 'Instructor-led Training' | 'Hands-on Workshop'
 export type EventStatus   = 'Upcoming' | 'Completed' | 'Cancelled'
 
 export interface Program {
