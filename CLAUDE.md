@@ -4,6 +4,40 @@
 
 ---
 
+## Auto-Dispatch Rule — Check Before Every Response
+
+Before responding to any prompt, silently evaluate every entry in both tables below. If a match is found, invoke it **in the same turn** — never defer to a follow-up.
+
+### Subagents
+
+| Subagent | When to spawn |
+|---|---|
+| **Explore** | Open-ended codebase searches, unknown file locations, cross-file pattern analysis, "where is X defined" — spawn instead of manual grep across 3+ locations |
+| **Plan** | Any task touching ≥ 3 files, architectural decisions, new features, significant refactors — enter plan mode before writing a single line of code |
+| **frontend-engineer** | Complex UI implementation requiring responsive design, accessibility, component libraries, or performance optimisation |
+| **general-purpose** | Multi-step research tasks, anything requiring web search + code search combined, or tasks too broad for a single focused agent |
+| **claude-code-guide** | Questions about Claude Code CLI features, hooks, MCP servers, slash commands, settings, IDE integrations, or the Anthropic API/SDK |
+| **prompt-enhancer** | User's request is vague, ambiguous, or poorly structured — enhance before acting on it |
+
+### Skills (slash commands)
+
+| Skill | When to invoke |
+|---|---|
+| **`/dewa-coe-platform`** | Any UI work, new page/tab, KPI card, chart, filter, Dataverse fetch, or design-system question in this project |
+| **`/owasp-security`** | Any auth, input handling, API endpoint, token storage, or permission logic |
+| **`/simplify`** | After completing any implementation task — review and clean up the diff |
+| **`/review`** | User asks for a code or PR review |
+| **`/security-review`** | User asks to audit the current branch for vulnerabilities |
+| **`/claude-api`** | Code imports `anthropic` / `@anthropic-ai/sdk`, or task involves the Claude API, prompt caching, tool use, or model configuration |
+| **`/update-config`** | User wants to change Claude Code settings, add permissions, configure hooks, or set env vars |
+| **`/keybindings-help`** | User wants to customise keyboard shortcuts or rebind keys |
+| **`/fewer-permission-prompts`** | User is seeing too many permission prompts during a session |
+| **`/schedule`** | User wants to schedule a recurring or one-time automated task |
+
+**Hard rule:** If anything in either table matches the request, invoke it immediately — do not silently skip it. Multiple matches → invoke all that apply, in parallel where possible.
+
+---
+
 ## Project Snapshot
 
 **Stack:** React 19 + TypeScript (strict) + Vite 7  

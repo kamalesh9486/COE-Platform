@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { RammasAtWorkService } from '../services/RammasAtWorkService'
 
 const ENDPOINT = import.meta.env.VITE_COPILOT_ENDPOINT as string | undefined
 if (!ENDPOINT && import.meta.env.DEV) {
@@ -60,6 +61,8 @@ export function CopilotDataProvider({ children }: { children: ReactNode }) {
   const [error,        setError]        = useState<string | null>(null)
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function fetchData() {
       setLoading(true)
       setError(null)
@@ -69,6 +72,7 @@ export function CopilotDataProvider({ children }: { children: ReactNode }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
+          signal: controller.signal,
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json() as Record<string, unknown>
@@ -83,12 +87,18 @@ export function CopilotDataProvider({ children }: { children: ReactNode }) {
         setAgentDetails(details)
         setAgentValue(values)
       } catch (err) {
+        if ((err as Error).name === 'AbortError') return
         setError((err as Error).message)
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
+
     void fetchData()
+    // Warm the Rammas cache at app startup so the panel loads instantly
+    RammasAtWorkService.fetch().catch(() => {})
+
+    return () => controller.abort()
   }, [])
 
   return (

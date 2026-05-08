@@ -7,6 +7,7 @@ import {
 import { AI_TOOLS, type AITool } from './data'
 import Icon from '../../components/Icon'
 import CopilotKitPanel from '../CopilotKit'
+import RammasAtWorkPanel from './RammasAtWorkPanel'
 import { useCopilotData } from '../../context/CopilotDataContext'
 
 // ── Tooltip style ─────────────────────────────────────────────
@@ -321,6 +322,9 @@ export default function AIToolsTab() {
   if (copilotOpen) {
     return <CopilotKitPanel onBack={() => setCopilotOpen(false)} />
   }
+  if (detailTool?.name === 'Rammas At Work') {
+    return <RammasAtWorkPanel onBack={() => setDetailTool(null)} />
+  }
   if (detailTool) {
     return <ToolDetailView tool={detailTool} onBack={() => setDetailTool(null)} />
   }
@@ -368,7 +372,7 @@ export default function AIToolsTab() {
             <div
               key={tool.name}
               className="ps-tool-card"
-              style={{ border: `1px solid ${tool.color}22`, cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.15s, border-color 0.2s' }}
+              style={{ border: `1px solid ${tool.color}22`, cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.15s, border-color 0.2s', position: 'relative', overflow: 'hidden' }}
               onClick={() => setDetailTool(tool)}
               onMouseOver={e => {
                 const el = e.currentTarget as HTMLDivElement
@@ -383,8 +387,16 @@ export default function AIToolsTab() {
                 el.style.transform = ''
               }}
             >
+              {/* LIVE badge for Rammas At Work */}
+              {tool.name === 'Rammas At Work' && (
+                <div style={{ position: 'absolute', top: 10, right: 10, background: '#dcfce7', color: '#15803d', fontSize: 9, fontWeight: 800, letterSpacing: '0.6px', padding: '2px 7px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                  LIVE
+                </div>
+              )}
+
               {/* Top row */}
-              <div className="ps-tool-card-top">
+              <div className="ps-tool-card-top" style={tool.name === 'Rammas At Work' ? { paddingRight: 60 } : undefined}>
                 <div className="ps-tool-icon" style={{ background: `${tool.color}15`, color: tool.color }}>
                   <Icon name={tool.icon} />
                 </div>
